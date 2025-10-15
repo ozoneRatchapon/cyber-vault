@@ -16,4 +16,7 @@ cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
-test = "vitest"
+test = "cd .. && npx vitest run anchor/tests"
+
+[test]
+startup_wait = 10000
