@@ -29,6 +29,7 @@ dist-ssr
 
 # Anchor
 /anchor/.anchor
+/anchor/target/
 /anchor/target/debug
 /anchor/target/deploy
 /anchor/target/release
