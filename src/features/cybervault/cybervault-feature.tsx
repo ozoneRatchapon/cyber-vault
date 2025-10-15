@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSolana } from '@/components/solana/use-solana'
 import { WalletDropdown } from '@/components/wallet-dropdown'
 import { AppHero } from '@/components/app-hero'
@@ -9,17 +9,39 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Shield, Heart, Skull, Timer, Coins, AlertTriangle, Zap, Lock, Unlock, Users, Clock } from 'lucide-react'
+import { Progress } from '@/components/ui/progress'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import {
+  Shield,
+  Heart,
+  Skull,
+  Coins,
+  AlertTriangle,
+  Zap,
+  Lock,
+  Unlock,
+  Copy,
+  CheckCircle,
+  XCircle,
+  Loader2,
+  TrendingUp,
+  Eye,
+  RefreshCw,
+} from 'lucide-react'
 import { CybervaultUiProgramExplorerLink } from './ui/cybervault-ui-program-explorer-link'
-
-interface VaultStatus {
-  isActive: boolean
-  totalDeposited: number
-  lastHeartbeat: Date
-  timeoutSeconds: number
-  beneficiary: string
-  owner: string
-}
+import { useCybervaultMutations } from './data-access/use-cybervault-mutations'
+import { useCyberVaultQuery, useVaultByOwnerQuery } from './data-access/use-cybervault-queries'
+import { useUserTokensQuery, useTokenSelection, DEMO_TOKENS } from './data-access/use-token-selection'
+import { toast } from 'sonner'
+import { type Address } from 'gill'
 
 export default function CybervaultFeature() {
   const { account } = useSolana()
@@ -27,23 +49,151 @@ export default function CybervaultFeature() {
   const [beneficiaryAddress, setBeneficiaryAddress] = useState('')
   const [timeoutHours, setTimeoutHours] = useState(24)
   const [depositAmount, setDepositAmount] = useState('')
-  const [vaultStatus] = useState<VaultStatus | null>(null)
+  const [inheritOwnerAddress, setInheritOwnerAddress] = useState('')
+  const [showAdvanced, setShowAdvanced] = useState(false)
 
-  // Mock data for demonstration
-  const mockVaultStatus: VaultStatus = {
-    isActive: true,
-    totalDeposited: 5000,
-    lastHeartbeat: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-    timeoutSeconds: 24 * 60 * 60, // 24 hours
-    beneficiary: 'Bene...4x7z',
-    owner: 'Owner...8k2m',
+  // Data hooks
+  const vaultQuery = useCyberVaultQuery({ account: account || null })
+  const inheritVaultQuery = useVaultByOwnerQuery({
+    ownerAddress: inheritOwnerAddress ? (inheritOwnerAddress as Address) : null,
+  })
+  const userTokensQuery = useUserTokensQuery({ account: account || null })
+  const tokenSelection = useTokenSelection()
+
+  // Mutation hooks
+  const mutations = useCybervaultMutations({ account: account! })
+
+  // Use demo tokens if no real tokens are available (for testing)
+  const availableTokens = userTokensQuery.data?.length ? userTokensQuery.data : DEMO_TOKENS
+
+  // Auto-select first token if none selected
+  useEffect(() => {
+    if (availableTokens.length > 0 && !tokenSelection.selectedToken && !tokenSelection.isCustomToken) {
+      tokenSelection.selectToken(availableTokens[0])
+    }
+  }, [availableTokens, tokenSelection.selectedToken, tokenSelection.isCustomToken])
+
+  // Validation helpers
+  const isValidSolanaAddress = (address: string): boolean => {
+    try {
+      return address.length >= 32 && address.length <= 44 && /^[1-9A-HJ-NP-Za-km-z]+$/.test(address)
+    } catch {
+      return false
+    }
   }
 
-  const timeUntilTimeout = mockVaultStatus
-    ? Math.max(0, mockVaultStatus.timeoutSeconds - (Date.now() - mockVaultStatus.lastHeartbeat.getTime()) / 1000)
-    : 0
-  const hoursUntilTimeout = Math.floor(timeUntilTimeout / 3600)
-  const minutesUntilTimeout = Math.floor((timeUntilTimeout % 3600) / 60)
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text)
+    toast.success(`${label} copied to clipboard!`)
+  }
+
+  const formatAddress = (address: string, chars = 4): string => {
+    return `${address.slice(0, chars)}...${address.slice(-chars)}`
+  }
+
+  const formatTimeRemaining = (seconds: number): string => {
+    if (seconds <= 0) return 'EXPIRED'
+
+    const hours = Math.floor(seconds / 3600)
+    const minutes = Math.floor((seconds % 3600) / 60)
+    const secs = seconds % 60
+
+    if (hours > 0) return `${hours}h ${minutes}m`
+    if (minutes > 0) return `${minutes}m ${secs}s`
+    return `${secs}s`
+  }
+
+  // Handle vault initialization
+  const handleInitializeVault = async () => {
+    if (!account?.address || !tokenSelection.getSelectedMint()) {
+      toast.error('Missing required information')
+      return
+    }
+
+    if (!isValidSolanaAddress(beneficiaryAddress)) {
+      toast.error('Invalid beneficiary address')
+      return
+    }
+
+    if (beneficiaryAddress === account.address) {
+      toast.error('Cannot set yourself as beneficiary')
+      return
+    }
+
+    if (timeoutHours < 1) {
+      toast.error('Timeout must be at least 1 hour')
+      return
+    }
+
+    try {
+      await mutations.initializeVault.mutateAsync({
+        beneficiary: beneficiaryAddress as Address,
+        timeoutHours,
+        mint: tokenSelection.getSelectedMint()!,
+      })
+
+      // Switch to manage tab after successful creation
+      setSelectedTab('manage')
+      setBeneficiaryAddress('')
+      setTimeoutHours(24)
+    } catch (error) {
+      console.error('Initialize vault error:', error)
+    }
+  }
+
+  // Handle token deposit
+  const handleDepositTokens = async () => {
+    if (!tokenSelection.getSelectedMint() || !depositAmount) {
+      toast.error('Please select token and enter amount')
+      return
+    }
+
+    const amount = parseFloat(depositAmount)
+    if (isNaN(amount) || amount <= 0) {
+      toast.error('Invalid deposit amount')
+      return
+    }
+
+    const selectedToken = tokenSelection.selectedToken
+    if (!selectedToken) return
+
+    // Convert to smallest unit based on decimals
+    const amountBN = BigInt(Math.floor(amount * 10 ** selectedToken.decimals))
+
+    try {
+      await mutations.depositTokens.mutateAsync({
+        amount: amountBN,
+        mint: tokenSelection.getSelectedMint()!,
+      })
+
+      setDepositAmount('')
+    } catch (error) {
+      console.error('Deposit tokens error:', error)
+    }
+  }
+
+  // Handle inheritance claim
+  const handleClaimInheritance = async () => {
+    if (!inheritOwnerAddress) {
+      toast.error('Please enter the owner address')
+      return
+    }
+
+    if (!isValidSolanaAddress(inheritOwnerAddress)) {
+      toast.error('Invalid owner address')
+      return
+    }
+
+    try {
+      await mutations.claimInheritance.mutateAsync({
+        ownerAddress: inheritOwnerAddress as Address,
+      })
+
+      setInheritOwnerAddress('')
+    } catch (error) {
+      console.error('Claim inheritance error:', error)
+    }
+  }
 
   if (!account) {
     return (
@@ -64,16 +214,81 @@ export default function CybervaultFeature() {
     )
   }
 
+  const vault = vaultQuery.data
+  const inheritVault = inheritVaultQuery.data
+  const isLoading = mutations.isAnyLoading || vaultQuery.isLoading
+
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
       <AppHero title="🔐 Cyber-Vault" subtitle="Decentralized Dead Man's Switch Protocol">
         <div className="flex items-center gap-4 text-sm opacity-75">
           <CybervaultUiProgramExplorerLink />
           <Badge variant="outline" className="border-purple-500 text-purple-400">
-            PoC v1.0
+            {vault ? 'ACTIVE' : 'READY'}
           </Badge>
+          {isLoading && <Loader2 className="h-4 w-4 animate-spin text-blue-400" />}
         </div>
       </AppHero>
+
+      {/* Vault Status Overview */}
+      {vault && (
+        <Card className="border-green-500/20 bg-green-500/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-green-400" />
+              Vault Status Overview
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-400">{vault.totalDeposited.toString()}</div>
+                <div className="text-sm text-muted-foreground">Total Secured</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-400">{formatTimeRemaining(vault.timeUntilTimeout)}</div>
+                <div className="text-sm text-muted-foreground">Time Remaining</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-purple-400">{formatAddress(vault.beneficiary)}</div>
+                <div className="text-sm text-muted-foreground">Beneficiary</div>
+              </div>
+              <div className="text-center">
+                <Badge
+                  variant={vault.isTimeoutReached ? 'destructive' : 'default'}
+                  className={vault.isTimeoutReached ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}
+                >
+                  {vault.isTimeoutReached ? 'CLAIMABLE' : 'PROTECTED'}
+                </Badge>
+              </div>
+            </div>
+
+            {!vault.isTimeoutReached && (
+              <div className="mt-4">
+                <div className="flex justify-between text-sm mb-2">
+                  <span>Heartbeat Protection</span>
+                  <span>
+                    {Math.floor(
+                      ((vault.timeoutSeconds * 1000 - (Date.now() - vault.lastHeartbeat.getTime())) /
+                        (vault.timeoutSeconds * 1000)) *
+                        100,
+                    )}
+                    %
+                  </span>
+                </div>
+                <Progress
+                  value={
+                    ((vault.timeoutSeconds * 1000 - (Date.now() - vault.lastHeartbeat.getTime())) /
+                      (vault.timeoutSeconds * 1000)) *
+                    100
+                  }
+                  className="h-2"
+                />
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Tab Navigation */}
       <div className="flex space-x-1 bg-muted p-1 rounded-lg w-fit">
@@ -81,6 +296,7 @@ export default function CybervaultFeature() {
           variant={selectedTab === 'create' ? 'default' : 'ghost'}
           onClick={() => setSelectedTab('create')}
           className="flex items-center gap-2"
+          disabled={vault !== null} // Disable if vault already exists
         >
           <Lock className="h-4 w-4" />
           Create Vault
@@ -89,6 +305,7 @@ export default function CybervaultFeature() {
           variant={selectedTab === 'manage' ? 'default' : 'ghost'}
           onClick={() => setSelectedTab('manage')}
           className="flex items-center gap-2"
+          disabled={!vault} // Disable if no vault exists
         >
           <Heart className="h-4 w-4" />
           Manage Vault
@@ -106,53 +323,142 @@ export default function CybervaultFeature() {
       {/* Create Vault Tab */}
       {selectedTab === 'create' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="border-purple-500/20">
+          <Card className={`border-purple-500/20 ${vault ? 'opacity-50' : ''}`}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Shield className="h-5 w-5 text-purple-400" />
                 Initialize Cyber-Vault
+                {vault && <Badge variant="secondary">Already Created</Badge>}
               </CardTitle>
               <CardDescription>
                 Create your decentralized dead man's switch with immutable smart contract protection
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="beneficiary">Beneficiary Address</Label>
-                <Input
-                  id="beneficiary"
-                  placeholder="Enter Solana wallet address..."
-                  value={beneficiaryAddress}
-                  onChange={(e) => setBeneficiaryAddress(e.target.value)}
-                />
-                <p className="text-xs text-muted-foreground">The wallet that will inherit your assets after timeout</p>
-              </div>
+              {vault ? (
+                <Alert>
+                  <CheckCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    You already have an active Cyber-Vault. Switch to the "Manage Vault" tab to interact with it.
+                  </AlertDescription>
+                </Alert>
+              ) : (
+                <>
+                  {/* Token Selection */}
+                  <div className="space-y-2">
+                    <Label>Token to Secure</Label>
+                    <Select
+                      value={tokenSelection.isCustomToken ? 'custom' : tokenSelection.selectedToken?.mint || ''}
+                      onValueChange={(value) => {
+                        if (value === 'custom') {
+                          setShowAdvanced(true)
+                        } else {
+                          const token = availableTokens.find((t) => t.mint === value)
+                          if (token) tokenSelection.selectToken(token)
+                        }
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a token..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableTokens.map((token) => (
+                          <SelectItem key={token.mint} value={token.mint}>
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-xs">{token.symbol}</span>
+                              <span className="text-muted-foreground">{token.name}</span>
+                              <span className="text-xs text-muted-foreground">({token.uiAmount})</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                        <SelectItem value="custom">
+                          <div className="flex items-center gap-2">
+                            <Zap className="h-4 w-4" />
+                            Custom Token...
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="timeout">Timeout Period (Hours)</Label>
-                <Input
-                  id="timeout"
-                  type="number"
-                  min="1"
-                  value={timeoutHours}
-                  onChange={(e) => setTimeoutHours(Number(e.target.value))}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Minimum 1 hour. Assets transfer after this period of digital silence.
-                </p>
-              </div>
+                  {/* Custom Token Input */}
+                  {showAdvanced && (
+                    <div className="space-y-2">
+                      <Label htmlFor="customMint">Custom Token Mint Address</Label>
+                      <Input
+                        id="customMint"
+                        placeholder="Enter mint address..."
+                        value={tokenSelection.customMint}
+                        onChange={(e) => {
+                          tokenSelection.setCustomMint(e.target.value)
+                        }}
+                        onBlur={() => {
+                          if (tokenSelection.customMint && tokenSelection.isValidMint(tokenSelection.customMint)) {
+                            try {
+                              tokenSelection.selectCustomToken(tokenSelection.customMint)
+                            } catch (error) {
+                              toast.error('Invalid mint address')
+                            }
+                          }
+                        }}
+                      />
+                    </div>
+                  )}
 
-              <Alert>
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription>
-                  Once created, the beneficiary and timeout cannot be changed. Choose carefully.
-                </AlertDescription>
-              </Alert>
+                  <div className="space-y-2">
+                    <Label htmlFor="beneficiary">Beneficiary Address</Label>
+                    <Input
+                      id="beneficiary"
+                      placeholder="Enter Solana wallet address..."
+                      value={beneficiaryAddress}
+                      onChange={(e) => setBeneficiaryAddress(e.target.value)}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      The wallet that will inherit your assets after timeout
+                    </p>
+                  </div>
 
-              <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
-                <Lock className="h-4 w-4 mr-2" />
-                Initialize Vault
-              </Button>
+                  <div className="space-y-2">
+                    <Label htmlFor="timeout">Timeout Period (Hours)</Label>
+                    <Input
+                      id="timeout"
+                      type="number"
+                      min="1"
+                      value={timeoutHours}
+                      onChange={(e) => setTimeoutHours(Number(e.target.value))}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Minimum 1 hour. Assets transfer after this period of digital silence.
+                    </p>
+                  </div>
+
+                  <Alert>
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      Once created, the beneficiary and timeout cannot be changed. Choose carefully.
+                    </AlertDescription>
+                  </Alert>
+
+                  <Button
+                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                    onClick={handleInitializeVault}
+                    disabled={
+                      mutations.initializeVault.isPending ||
+                      !tokenSelection.getSelectedMint() ||
+                      !beneficiaryAddress ||
+                      !isValidSolanaAddress(beneficiaryAddress) ||
+                      timeoutHours < 1
+                    }
+                  >
+                    {mutations.initializeVault.isPending ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Lock className="h-4 w-4 mr-2" />
+                    )}
+                    Initialize Vault
+                  </Button>
+                </>
+              )}
             </CardContent>
           </Card>
 
@@ -211,13 +517,16 @@ export default function CybervaultFeature() {
       )}
 
       {/* Manage Vault Tab */}
-      {selectedTab === 'manage' && (
+      {selectedTab === 'manage' && vault && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <Card className="border-green-500/20">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Heart className="h-5 w-5 text-red-400" />
                 Vital Signs
+                <Button variant="ghost" size="sm" onClick={() => vaultQuery.refetch()} disabled={vaultQuery.isFetching}>
+                  <RefreshCw className={`h-4 w-4 ${vaultQuery.isFetching ? 'animate-spin' : ''}`} />
+                </Button>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -225,7 +534,7 @@ export default function CybervaultFeature() {
                 <span className="text-sm">Status</span>
                 <Badge variant="outline" className="border-green-500 text-green-400">
                   <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse" />
-                  ACTIVE
+                  {vault.isActive ? 'ACTIVE' : 'INACTIVE'}
                 </Badge>
               </div>
 
@@ -234,90 +543,147 @@ export default function CybervaultFeature() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Last Heartbeat</span>
-                  <span className="text-sm font-mono">2h ago</span>
+                  <span className="text-sm font-mono">
+                    {Math.floor((Date.now() - vault.lastHeartbeat.getTime()) / (1000 * 60 * 60))}h ago
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Time Until Timeout</span>
-                  <span className="text-sm font-mono text-yellow-400">
-                    {hoursUntilTimeout}h {minutesUntilTimeout}m
+                  <span className={`text-sm font-mono ${vault.isTimeoutReached ? 'text-red-400' : 'text-yellow-400'}`}>
+                    {formatTimeRemaining(vault.timeUntilTimeout)}
                   </span>
                 </div>
               </div>
 
-              <Button className="w-full bg-red-600 hover:bg-red-700">
-                <Heart className="h-4 w-4 mr-2" />
+              <Button
+                className="w-full bg-red-600 hover:bg-red-700"
+                onClick={() => mutations.sendHeartbeat.mutate()}
+                disabled={mutations.sendHeartbeat.isPending || vault.isTimeoutReached}
+              >
+                {mutations.sendHeartbeat.isPending ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Heart className="h-4 w-4 mr-2" />
+                )}
                 Send Heartbeat
               </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="border-blue-500/20">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Coins className="h-5 w-5 text-blue-400" />
-                Digital Assets
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-blue-400">5,000</div>
-                <div className="text-sm text-muted-foreground">USDC Secured</div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-2">
-                <Label htmlFor="deposit">Deposit Amount</Label>
-                <Input
-                  id="deposit"
-                  placeholder="Amount to deposit..."
-                  value={depositAmount}
-                  onChange={(e) => setDepositAmount(e.target.value)}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <Button variant="outline" size="sm">
-                  <Coins className="h-4 w-4 mr-2" />
-                  Deposit
-                </Button>
-                <Button variant="outline" size="sm">
-                  <Unlock className="h-4 w-4 mr-2" />
-                  Withdraw
-                </Button>
-              </div>
             </CardContent>
           </Card>
 
           <Card className="border-purple-500/20">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-purple-400" />
-                Vault Configuration
+                <Coins className="h-5 w-5 text-purple-400" />
+                Asset Management
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm">Owner</span>
-                  <code className="text-xs bg-muted px-2 py-1 rounded">{account.address.slice(0, 8)}...</code>
+                  <span className="text-sm">Total Secured</span>
+                  <span className="text-sm font-mono">{vault.totalDeposited.toString()}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm">Beneficiary</span>
-                  <code className="text-xs bg-muted px-2 py-1 rounded">Bene...4x7z</code>
+                  <span className="text-sm">Token</span>
+                  <span className="text-sm font-mono">{formatAddress(vault.mint)}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm">Timeout</span>
-                  <span className="text-sm">24 hours</span>
+                  <span className="text-sm">Vault Address</span>
+                  <Button variant="ghost" size="sm" onClick={() => copyToClipboard(vault.tokenVault, 'Vault address')}>
+                    <Copy className="h-3 w-3" />
+                  </Button>
                 </div>
               </div>
 
-              <Alert>
-                <Timer className="h-4 w-4" />
-                <AlertDescription>
-                  Configuration is immutable once set. Emergency withdrawal available.
-                </AlertDescription>
-              </Alert>
+              <Separator />
+
+              <div className="space-y-2">
+                <Label htmlFor="depositAmount">Deposit Amount</Label>
+                <Input
+                  id="depositAmount"
+                  type="number"
+                  placeholder="0.00"
+                  value={depositAmount}
+                  onChange={(e) => setDepositAmount(e.target.value)}
+                />
+              </div>
+
+              <Button
+                className="w-full"
+                onClick={handleDepositTokens}
+                disabled={
+                  mutations.depositTokens.isPending ||
+                  !depositAmount ||
+                  parseFloat(depositAmount) <= 0 ||
+                  vault.isTimeoutReached
+                }
+              >
+                {mutations.depositTokens.isPending ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <TrendingUp className="h-4 w-4 mr-2" />
+                )}
+                Deposit Tokens
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="border-yellow-500/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-yellow-400" />
+                Emergency Actions
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Beneficiary</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-mono">{formatAddress(vault.beneficiary)}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyToClipboard(vault.beneficiary, 'Beneficiary address')}
+                    >
+                      <Copy className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="destructive" className="w-full" disabled={vault.isTimeoutReached}>
+                    <AlertTriangle className="h-4 w-4 mr-2" />
+                    Emergency Withdraw
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>⚠️ Emergency Withdrawal</DialogTitle>
+                    <DialogDescription>
+                      This will withdraw all assets and deactivate your vault. This action cannot be undone.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="flex gap-2 mt-4">
+                    <Button
+                      variant="destructive"
+                      onClick={() => mutations.emergencyWithdraw.mutate()}
+                      disabled={mutations.emergencyWithdraw.isPending}
+                    >
+                      {mutations.emergencyWithdraw.isPending ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Unlock className="h-4 w-4 mr-2" />
+                      )}
+                      Confirm Withdrawal
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </CardContent>
           </Card>
         </div>
@@ -330,71 +696,91 @@ export default function CybervaultFeature() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Skull className="h-5 w-5 text-orange-400" />
-                Digital Inheritance
+                Claim Digital Inheritance
               </CardTitle>
-              <CardDescription>Claim inherited assets from cyber-vaults where you are the beneficiary</CardDescription>
+              <CardDescription>Check if you're entitled to inherit assets from a Cyber-Vault</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Alert className="border-yellow-500/50 bg-yellow-500/10">
-                <Clock className="h-4 w-4" />
-                <AlertDescription>Inheritance can only be claimed after the timeout period expires</AlertDescription>
-              </Alert>
-
-              <div className="space-y-4">
-                <div className="p-4 border rounded-lg bg-muted/50">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-semibold">Vault #1</span>
-                    <Badge variant="outline" className="border-red-500 text-red-400">
-                      TIMEOUT REACHED
-                    </Badge>
-                  </div>
-                  <div className="text-sm space-y-1">
-                    <div className="flex justify-between">
-                      <span>Owner:</span>
-                      <code className="text-xs">Dead...1234</code>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Assets:</span>
-                      <span className="font-mono">2,500 USDC</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Last Heartbeat:</span>
-                      <span>25 hours ago</span>
-                    </div>
-                  </div>
-                  <Button className="w-full mt-3 bg-gradient-to-r from-orange-600 to-red-600">
-                    <Skull className="h-4 w-4 mr-2" />
-                    Claim Inheritance
-                  </Button>
-                </div>
-
-                <div className="p-4 border rounded-lg bg-muted/50 opacity-60">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-semibold">Vault #2</span>
-                    <Badge variant="outline" className="border-green-500 text-green-400">
-                      STILL ACTIVE
-                    </Badge>
-                  </div>
-                  <div className="text-sm space-y-1">
-                    <div className="flex justify-between">
-                      <span>Owner:</span>
-                      <code className="text-xs">Live...5678</code>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Assets:</span>
-                      <span className="font-mono">1,200 USDC</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Timeout in:</span>
-                      <span>18 hours</span>
-                    </div>
-                  </div>
-                  <Button disabled className="w-full mt-3">
-                    <Timer className="h-4 w-4 mr-2" />
-                    Waiting for Timeout
-                  </Button>
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="ownerAddress">Original Owner Address</Label>
+                <Input
+                  id="ownerAddress"
+                  placeholder="Enter the vault owner's address..."
+                  value={inheritOwnerAddress}
+                  onChange={(e) => setInheritOwnerAddress(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">The address of the person who created the vault</p>
               </div>
+
+              {inheritOwnerAddress && isValidSolanaAddress(inheritOwnerAddress) && (
+                <Button
+                  variant="outline"
+                  onClick={() => inheritVaultQuery.refetch()}
+                  disabled={inheritVaultQuery.isFetching}
+                  className="w-full"
+                >
+                  {inheritVaultQuery.isFetching ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Eye className="h-4 w-4 mr-2" />
+                  )}
+                  Check Vault Status
+                </Button>
+              )}
+
+              {inheritVault && (
+                <div className="space-y-2 p-3 border rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Vault Status</span>
+                    <Badge variant={inheritVault.isActive ? 'default' : 'secondary'}>
+                      {inheritVault.isActive ? 'Active' : 'Inactive'}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Beneficiary</span>
+                    <span className="text-sm font-mono">{formatAddress(inheritVault.beneficiary)}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Assets</span>
+                    <span className="text-sm font-mono">{inheritVault.totalDeposited.toString()}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Time Status</span>
+                    <Badge variant={inheritVault.isTimeoutReached ? 'destructive' : 'default'}>
+                      {inheritVault.isTimeoutReached ? 'CLAIMABLE' : formatTimeRemaining(inheritVault.timeUntilTimeout)}
+                    </Badge>
+                  </div>
+
+                  {inheritVault.isTimeoutReached && inheritVault.beneficiary === account.address && (
+                    <Button
+                      className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700"
+                      onClick={handleClaimInheritance}
+                      disabled={mutations.claimInheritance.isPending}
+                    >
+                      {mutations.claimInheritance.isPending ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Skull className="h-4 w-4 mr-2" />
+                      )}
+                      Claim Inheritance
+                    </Button>
+                  )}
+
+                  {inheritVault.beneficiary !== account.address && (
+                    <Alert>
+                      <XCircle className="h-4 w-4" />
+                      <AlertDescription>You are not the designated beneficiary for this vault.</AlertDescription>
+                    </Alert>
+                  )}
+                </div>
+              )}
+
+              {inheritOwnerAddress && !inheritVault && !inheritVaultQuery.isFetching && (
+                <Alert>
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>No active vault found for this owner address.</AlertDescription>
+                </Alert>
+              )}
             </CardContent>
           </Card>
 
@@ -410,7 +796,7 @@ export default function CybervaultFeature() {
                 <Alert>
                   <Skull className="h-4 w-4" />
                   <AlertDescription>
-                    <strong>Digital Death Detected:</strong> The silence of cyberspace has been confirmed.
+                    <strong>Digital Death Detection:</strong> The silence of cyberspace confirms digital mortality.
                   </AlertDescription>
                 </Alert>
 
