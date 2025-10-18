@@ -4,7 +4,7 @@ import { AppRoutes } from '@/app-routes.tsx'
 
 const links: { label: string; path: string }[] = [
   //
-  { label: 'Cybervault', path: '/' },
+  // { label: 'Cybervault', path: '/' },
   { label: 'Account', path: '/account' },
 ]
 
