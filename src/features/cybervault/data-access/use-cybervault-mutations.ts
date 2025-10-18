@@ -70,10 +70,10 @@ export function useInitializeVaultMutation({ account }: { account: UiWalletAccou
       // Invalidate vault queries to refetch data
       queryClient.invalidateQueries({ queryKey: ['cybervault'] })
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error('Initialize vault error:', error)
       toast.error('Failed to Initialize Vault', {
-        description: error?.message || 'An unexpected error occurred',
+        description: error instanceof Error ? error.message : 'An unexpected error occurred',
       })
     },
   })
@@ -113,10 +113,10 @@ export function useDepositTokensMutation({ account }: { account: UiWalletAccount
       toastTx(signature)
       queryClient.invalidateQueries({ queryKey: ['cybervault'] })
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error('Deposit tokens error:', error)
       toast.error('Failed to Deposit Tokens', {
-        description: error?.message || 'Transaction failed',
+        description: error instanceof Error ? error.message : 'Transaction failed',
       })
     },
   })
@@ -147,10 +147,10 @@ export function useSendHeartbeatMutation({ account }: { account: UiWalletAccount
       toastTx(signature)
       queryClient.invalidateQueries({ queryKey: ['cybervault'] })
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error('Send heartbeat error:', error)
       toast.error('Failed to Send Heartbeat', {
-        description: error?.message || 'Could not confirm digital presence',
+        description: error instanceof Error ? error.message : 'Could not confirm digital presence',
       })
     },
   })
@@ -185,10 +185,10 @@ export function useEmergencyWithdrawMutation({ account }: { account: UiWalletAcc
       toastTx(signature)
       queryClient.invalidateQueries({ queryKey: ['cybervault'] })
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error('Emergency withdraw error:', error)
       toast.error('Failed to Execute Emergency Withdrawal', {
-        description: error?.message || 'Could not recover assets',
+        description: error instanceof Error ? error.message : 'Could not recover assets',
       })
     },
   })
@@ -223,10 +223,10 @@ export function useClaimInheritanceMutation({ account }: { account: UiWalletAcco
       toastTx(signature)
       queryClient.invalidateQueries({ queryKey: ['cybervault'] })
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error('Claim inheritance error:', error)
       toast.error('Failed to Claim Inheritance', {
-        description: error?.message || 'Assets not yet available for claim',
+        description: error instanceof Error ? error.message : 'Assets not yet available for claim',
       })
     },
   })

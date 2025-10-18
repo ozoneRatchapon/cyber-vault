@@ -4,21 +4,16 @@ import { lazy } from 'react'
 const AccountDetailFeature = lazy(() => import('@/features/account/account-feature-detail.tsx'))
 const AccountIndexFeature = lazy(() => import('@/features/account/account-feature-index.tsx'))
 const CybervaultFeature = lazy(() => import('@/features/cybervault/cybervault-feature'))
-const DashboardFeature = lazy(() => import('@/features/dashboard/dashboard-feature'))
 
 export function AppRoutes() {
   return useRoutes([
-    { index: true, element: <DashboardFeature /> },
+    { index: true, element: <CybervaultFeature /> },
     {
       path: 'account',
       children: [
         { index: true, element: <AccountIndexFeature /> },
         { path: ':address', element: <AccountDetailFeature /> },
       ],
-    },
-    {
-      path: 'cybervault',
-      element: <CybervaultFeature />,
     },
   ])
 }
