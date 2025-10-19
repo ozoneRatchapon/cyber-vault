@@ -1,15 +1,49 @@
-# Cyber-Vault - Decentralized Dead Man's Switch on Solana
+# 🔐 Cyber-Vault: Decentralized Dead Man's Switch on Solana
 
-A robust dead man's switch implementation on Solana that allows users to lock SPL tokens for a specified inactivity period, after which designated beneficiaries can automatically claim the tokens. Built with pure Rust and the Anchor framework for secure and efficient smart contract development.
+> *"In the neon-lit streets of cyberspace, your digital fortune needs a guardian that never sleeps. Welcome to the future of trustless inheritance."*
+
+**Cyber-Vault** is a robust dead man's switch implementation on Solana that allows users to lock SPL tokens for a specified inactivity period, after which designated beneficiaries can automatically claim the tokens. Built with pure Rust and the Anchor framework for secure and efficient smart contract development.
+
+![Cyberpunk Banner](https://img.shields.io/badge/CYBERPUNK-2025-ff00ff?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMCA5TDEzLjA5IDE1Ljc0TDEyIDIyTDEwLjkxIDE1Ljc0TDQgOUwxMC45MSA4LjI2TDEyIDJaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K)
+![Solana](https://img.shields.io/badge/Solana-Network-9945ff?style=for-the-badge&logo=solana)
+![Anchor](https://img.shields.io/badge/Anchor-Framework-00d4aa?style=for-the-badge)
+![Rust](https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust)
+
+## 🌐 The Vision
+
+In a world where digital assets represent true wealth, the risk of losing access to your crypto fortune is real. Traditional inheritance systems are slow, expensive, and require trust in intermediaries. **Cyber-Vault** eliminates these problems through the power of immutable smart contracts.
 
 ## 🚀 Features
 
 ### Core Functionality
 - **🏗️ Vault Creation**: Lock SPL tokens with a custom inactivity timer
-- **💓 Heartbeat System**: Extend the timer by sending periodic transactions  
+- **💓 Heartbeat System**: Extend the timer by sending periodic transactions
 - **🎯 Automatic Claims**: Token transfer to beneficiary after expiration
 - **🚨 Emergency Withdraw**: Owner access to partial funds while maintaining security
 - **💰 Rent Optimization**: Automatic rent reclamation on vault closure
+- **🛡️ Immutable Logic**: Code is Law - mathematically guaranteed inheritance
+- **⚡ Instant Execution**: No lawyers, no paperwork, no delays
+
+## 🚀 How It Works
+
+```mermaid
+graph TD
+    A[Owner Initializes Vault] --> B[Sets Beneficiary & Timeout]
+    B --> C[Deposits SPL Tokens]
+    C --> D[Regular Heartbeat Signals]
+    D --> E{Digital Silence?}
+    E -->|No| D
+    E -->|Yes - Timeout Reached| F[Automatic Transfer to Beneficiary]
+    D --> G[Emergency Withdrawal Available]
+    G --> D
+```
+
+### The Protocol
+
+1. **Initialize**: Create your cyber-vault with a chosen beneficiary and timeout period
+2. **Deposit**: Secure your SPL tokens in the blockchain-protected vault
+3. **Heartbeat**: Send regular "proof of life" signals to reset the timer
+4. **Inherit**: If silence exceeds the timeout, assets automatically transfer to your beneficiary
 
 ## 📋 Architecture
 
@@ -23,6 +57,47 @@ A robust dead man's switch implementation on Solana that allows users to lock SP
 └─────────────────┘    │ • Enforce Rules │    └─────────────────┘
                        └─────────────────┘
 ```
+
+## 💻 Technical Architecture
+
+### Smart Contract Functions
+
+```rust
+// Initialize a new Cyber-Vault
+pub fn create_vault(
+    beneficiary: Pubkey,
+    inactivity_period: i64,
+) -> Result<()>
+
+// Deposit SPL tokens into the vault
+pub fn deposit_tokens(amount: u64) -> Result<()>
+
+// Send heartbeat to reset dead man's switch
+pub fn send_heartbeat() -> Result<()>
+
+// Claim inheritance after timeout
+pub fn claim_tokens() -> Result<()>
+
+// Emergency withdrawal by owner
+pub fn emergency_withdraw(amount: u64) -> Result<()>
+```
+
+## 🎮 Usage Guide
+
+### For Owners
+
+1. **Connect Wallet**: Connect your Solana wallet to the dApp
+2. **Create Vault**: Initialize with beneficiary address and timeout
+3. **Fund Vault**: Deposit SPL tokens you want to protect
+4. **Stay Active**: Send regular heartbeats or make deposits
+5. **Emergency Access**: Withdraw anytime while you're alive
+
+### For Beneficiaries
+
+1. **Monitor Status**: Check vault status and timeout countdown
+2. **Wait for Timeout**: Inheritance only available after silence period
+3. **Claim Assets**: Execute inheritance claim after timeout expires
+4. **Receive Tokens**: Assets automatically transfer to your wallet
 
 ## 🛠️ Quick Start
 
@@ -150,11 +225,24 @@ cyber-vault-rs/
 
 ## 🔒 Security Features
 
-- **Access Control**: Owner-only heartbeat and emergency withdraw operations
-- **Time Verification**: Prevents premature claims using Solana clock
-- **Token Safety**: Tokens held in program-controlled accounts
-- **Emergency Access**: Owner can withdraw partial funds while maintaining security
-- **Comprehensive Testing**: Full test coverage with LiteSVM
+### Access Controls
+- **Owner-only heartbeat and emergency withdraw operations**
+- **Time verification prevents premature claims using Solana clock**
+- **Tokens held in program-controlled accounts**
+- **Owner can withdraw partial funds while maintaining security**
+- **Comprehensive testing with LiteSVM**
+
+### Audited Components
+- **PDA Derivation**: Secure program-derived addresses
+- **Token Account Management**: Proper SPL token handling
+- **Access Controls**: Role-based permission system
+- **Timeout Logic**: Mathematically verified countdown
+
+### Known Limitations
+- Requires regular interaction to maintain heartbeat
+- Beneficiary must have basic Solana knowledge to claim
+- Gas fees required for all operations
+- Not suitable for extremely short timeout periods
 
 ## 🚨 Key Security Validations
 
@@ -226,14 +314,15 @@ anchor deploy --provider.cluster mainnet
 ## 🔮 Future Enhancements
 
 ### Post-MVP Features
-- Multiple beneficiaries support
-- Vault cancellation by owner
-- Emergency recovery mechanisms
-- Social recovery options
-- Notification systems (webhooks, email)
-- Governance features
-- Multi-signature support
-- Cross-chain compatibility
+- **Multi-Beneficiary Support**: Split inheritance among multiple parties
+- **Conditional Logic**: Complex inheritance rules and conditions
+- **Cross-Chain Integration**: Support for other blockchain networks
+- **Mobile App**: Native mobile interface for easier heartbeat management
+- **Notification System**: Email/SMS alerts for timeout warnings
+- **Vault Cancellation**: Owner can cancel vaults under certain conditions
+- **Social Recovery**: Emergency recovery mechanisms
+- **Governance Features**: Community-driven protocol upgrades
+- **Multi-signature Support**: Enhanced security for high-value vaults
 
 ## 🤝 Contributing
 
@@ -257,7 +346,9 @@ anchor deploy --provider.cluster mainnet
 
 ISC License - see [LICENSE](LICENSE) file for details.
 
-## ⚠️ Disclaimer
+## 🚨 Disclaimer
+
+**IMPORTANT**: This is a Proof of Concept (PoC) for educational and demonstration purposes. Do not use with real funds on mainnet without thorough testing and security audits. The developers are not responsible for any loss of funds.
 
 **This is MVP software intended for testing and development purposes only.**
 
@@ -266,13 +357,36 @@ ISC License - see [LICENSE](LICENSE) file for details.
 - Always test with small amounts first
 - Consider professional security audits for production use
 
-## 📞 Support
+## 🔗 Links
 
-- 📧 Email: [your-email@example.com]
-- 💬 Discord: [discord-link]
-- 📖 Documentation: [docs-link]
-- 🐛 Issues: [GitHub Issues]
+- **Documentation**: [Technical Reference](./SMART_CONTRACT.md)
+- **Security Audit**: [Security Analysis](./INSTRUCTION_REVIEW.md)
+- **Issues**: [GitHub Issues](https://github.com/ozoneRatchapon/cyber-vault-rs/issues)
+
+## ⚡ Quick Start Commands
+
+```bash
+# Development
+anchor build              # Build Solana program
+cargo test                # Run tests with LiteSVM
+solana-test-validator     # Start local validator
+
+# Production
+anchor deploy             # Deploy to network
+solana program show       # Show program info
+solana account            # Check account balance
+```
 
 ---
 
-**Built with ❤️ using Rust and Anchor Framework on Solana**
+<p align="center">
+  <strong>💀 "Code is Law. Math is Truth. Your Legacy is Eternal." 💀</strong>
+</p>
+
+<p align="center">
+  <em>Built with 🔥 using Rust and Anchor Framework on Solana</em>
+</p>
+
+---
+
+**Ready to secure your digital legacy? Welcome to the future of trustless inheritance! 🚀**
