@@ -1,0 +1,35 @@
+[workspace]
+members = [
+    "programs/*",
+]
+resolver = "2"
+
+[workspace.dependencies]
+anchor-lang = { version = "0.31.1", features = ["init-if-needed"] }
+anchor-spl = "0.31.1"
+
+[profile.release]
+overflow-checks = true
+
+[package]
+name = "cyber-vault-tests"
+version = "0.1.0"
+edition = "2021"
+
+[[test]]
+name = "cyber-vault-litesvm-tests"
+path = "tests/cyber-vault-litesvm-tests.rs"
+
+[dependencies]
+anchor-lang = { version = "0.31.1", features = ["init-if-needed"] }
+
+[dev-dependencies]
+litesvm = "0.6.1"
+litesvm-token = "0.6.1"
+anchor-litesvm = "0.2.0"
+litesvm-utils = "0.2.0"
+solana-sdk = "2.2"
+spl-associated-token-account = "6.0"
+sha2 = "0.10"
+hex = "0.4"
+serde_json = "1.0"
