@@ -6,7 +6,8 @@ mod state;
 
 use instructions::*;
 
-declare_id!("7y2rwbCLUSnNsorWWsoRsHyRjKZoH5x9G2R3ERhzPYgy");
+// Deployed program ID on devnet
+declare_id!("5QTdo3dK7pQZuYrL9ZCUWzAywpohu3gGEJBmbxqAA1gW");
 
 // Security constants
 pub const MINIMUM_TIMEOUT: i64 = 3600; // 1 hour minimum timeout

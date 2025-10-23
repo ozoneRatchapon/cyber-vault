@@ -5,9 +5,10 @@
 **Cyber-Vault** is a robust dead man's switch implementation on Solana that allows users to lock SPL tokens for a specified inactivity period, after which designated beneficiaries can automatically claim the tokens. Built with pure Rust and the Anchor framework for secure and efficient smart contract development.
 
 ![Cyberpunk Banner](https://img.shields.io/badge/CYBERPUNK-2025-ff00ff?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMCA5TDEzLjA5IDE1Ljc0TDEyIDIyTDEwLjkxIDE1Ljc0TDQgOUwxMC45MSA4LjI2TDEyIDJaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K)
-![Solana](https://img.shields.io/badge/Solana-Network-9945ff?style=for-the-badge&logo=solana)
-![Anchor](https://img.shields.io/badge/Anchor-Framework-00d4aa?style=for-the-badge)
+![Solana](https://img.shields.io/badge/Solana-Devnet-9945ff?style=for-the-badge&logo=solana)
+![Anchor](https://img.shields.io/badge/Anchor-Framework-00d4aa?style=for-the-badge&logo=anchor)
 ![Rust](https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust)
+![Deployed](https://img.shields.io/badge/Status-Deployed-brightgreen?style=for-the-badge)
 
 ## 🌐 The Vision
 
@@ -219,9 +220,16 @@ cyber-vault-rs/
 
 ## 📚 Documentation
 
+### Core Documentation
 - **[Smart Contract Technical Reference](./SMART_CONTRACT.md)** - Detailed technical implementation
 - **[Security Audit & Test Coverage](./INSTRUCTION_REVIEW.md)** - Comprehensive security analysis
 - **[Anchor IDL](./target/idl/cyber_vault_rs.json)** - Generated interface specification
+
+### Deployment Documentation
+- **[Devnet Deployment Guide](./docs/DEVNET_DEPLOYMENT.md)** - Complete deployment documentation
+- **[Transaction Analysis](./docs/TRANSACTIONS.md)** - Detailed transaction analysis and metrics
+- **[Program ID Migration](./docs/PROGRAM_ID_MIGRATION.md)** - Program ID migration documentation
+- **[Solana Explorer](https://explorer.solana.com/address/5QTdo3dK7pQZuYrL9ZCUWzAywpohu3gGEJBmbxqAA1gW?cluster=devnet)** - Live program on devnet
 
 ## 🔒 Security Features
 
@@ -284,12 +292,21 @@ anchor build
 
 ## 📋 Program Information
 
-- **Program ID**: `7y2rwbCLUSnNsorWWsoRsHyRjKZoH5x9G2R3ERhzPYgy`
+- **Program ID**: `5QTdo3dK7pQZuYrL9ZCUWzAywpohu3gGEJBmbxqAA1gW`
 - **Framework**: Anchor v0.31.1
 - **Language**: Pure Rust
-- **Network**: Solana Mainnet (deployable)
+- **Network**: Solana Devnet ✅ **DEPLOYED**
+- **Deployment Tool**: Surfpool (Crypto Infrastructure as Code)
 - **Test Coverage**: 100% instruction coverage with LiteSVM
 - **Security Rating**: A+ (see [Security Audit](./INSTRUCTION_REVIEW.md))
+- **Deployment Status**: ✅ **LIVE ON DEVNET**
+
+### Deployment Details
+- **Deployment Date**: Current session
+- **Network**: Devnet
+- **Total Transactions**: 314 transactions executed during deployment
+- **Buffer Account**: `GyTQmG8oSG6Nyh5AEVXVFH5Vp63wEyBxb6ZrAcqkAqHm`
+- **Ephemeral Authority**: `G3Xp6HXqsVK4EPqm4hxvrvQHW2kbGVYDFfnEr4MD3N1K` (closed after deployment)
 
 ## 🚀 Deployment
 
@@ -302,6 +319,19 @@ solana-test-validator
 anchor deploy --provider.cluster localnet
 ```
 
+### Devnet Deployment (Current)
+```bash
+# Set devnet configuration
+solana config set --url devnet
+
+# Deploy using Surfpool (recommended)
+surfpool start
+surfpool run deployment --env devnet
+
+# Traditional Anchor deployment
+anchor deploy --provider.cluster devnet
+```
+
 ### Mainnet Deployment
 ```bash
 # Set mainnet configuration
@@ -309,6 +339,15 @@ solana config set --url mainnet
 
 # Deploy to mainnet
 anchor deploy --provider.cluster mainnet
+```
+
+### View Deployed Program
+```bash
+# Check program account on devnet
+solana program show 5QTdo3dK7pQZuYrL9ZCUWzAywpohu3gGEJBmbxqAA1gW --url devnet
+
+# View program on Solana Explorer
+# https://explorer.solana.com/address/5QTdo3dK7pQZuYrL9ZCUWzAywpohu3gGEJBmbxqAA1gW?cluster=devnet
 ```
 
 ## 🔮 Future Enhancements
@@ -361,7 +400,12 @@ ISC License - see [LICENSE](LICENSE) file for details.
 
 - **Documentation**: [Technical Reference](./SMART_CONTRACT.md)
 - **Security Audit**: [Security Analysis](./INSTRUCTION_REVIEW.md)
+- **Devnet Deployment**: [Deployment Guide](./docs/DEVNET_DEPLOYMENT.md)
+- **Transaction Analysis**: [Transaction Metrics](./docs/TRANSACTIONS.md)
+- **Program ID Migration**: [Migration Guide](./docs/PROGRAM_ID_MIGRATION.md)
+- **Live Program**: [Solana Explorer](https://explorer.solana.com/address/5QTdo3dK7pQZuYrL9ZCUWzAywpohu3gGEJBmbxqAA1gW?cluster=devnet)
 - **Issues**: [GitHub Issues](https://github.com/ozoneRatchapon/cyber-vault-rs/issues)
+- **Surfpool**: [Deployment Infrastructure](https://surfpool.run/)
 
 ## ⚡ Quick Start Commands
 
@@ -371,10 +415,15 @@ anchor build              # Build Solana program
 cargo test                # Run tests with LiteSVM
 solana-test-validator     # Start local validator
 
-# Production
+# Production (Devnet)
+surfpool start            # Initialize deployment infrastructure
+surfpool run deployment --env devnet  # Deploy to devnet
+solana program show 5QTdo3dK7pQZuYrL9ZCUWzAywpohu3gGEJBmbxqAA1gW --url devnet  # Show program info
+solana account            # Check account balance
+
+# Production (Traditional)
 anchor deploy             # Deploy to network
 solana program show       # Show program info
-solana account            # Check account balance
 ```
 
 ---
