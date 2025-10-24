@@ -247,7 +247,7 @@ fn test_cyber_vault_full_flow() {
 
     // Send claim transaction
     let claim_tx_after = Transaction::new_signed_with_payer(
-        &[claim_instruction.clone()],
+        std::slice::from_ref(&claim_instruction),
         Some(&beneficiary.pubkey()),
         &[&beneficiary],
         svm.latest_blockhash(),
