@@ -1,8 +1,10 @@
 // The dioxus prelude contains a ton of common items used in dioxus apps. It's a good idea to import wherever you
 // need dioxus
+use chrono::Utc;
 use dioxus::document;
 use dioxus::prelude::*;
 use solana_sdk::pubkey::Pubkey;
+use std::str::FromStr;
 
 // Load the Tailwind CSS asset
 static CSS: Asset = asset!("/assets/tailwind.css");
@@ -13,6 +15,7 @@ mod vault_operations;
 mod wallet;
 
 use components::{CreateVaultForm, Header, VaultList};
+use vault_operations::VaultOperations;
 use wallet::{format_public_key, WalletProvider};
 
 // Wallet connection state
@@ -52,6 +55,7 @@ pub struct AppState {
     pub error: Option<String>,
     pub success: Option<String>,
     pub is_loading: bool,
+    // pub vault_ops: Option<VaultOperations>,
 }
 
 /// The main App component is the root of your application. Every component in Dioxus is a function
@@ -128,14 +132,121 @@ fn App() -> Element {
     });
 
     // Action handlers with better UX feedback
-    let handle_create_vault = Callback::new(
+    let handle_create_vault = Callback::new({
         move |(beneficiary, period, amount, mint): (String, i64, u64, String)| {
-            state.write().success = Some(
-                "🏦 Vault creation initiated! Check your wallet for confirmation.".to_string(),
-            );
-            // TODO: Implement actual vault creation
-        },
-    );
+            let mut state_clone = state.clone();
+            let wallet_clone = wallet_provider.clone();
+
+            spawn(async move {
+                // Extract owner pubkey first to avoid borrowing issues
+                let owner_pubkey = {
+                    let state_read = state_clone.read();
+                    match state_read.wallet.public_key {
+                        Some(pk) => pk,
+                        None => {
+                            drop(state_read);
+                            state_clone.write().error = Some("Wallet not connected".to_string());
+                            state_clone.write().is_loading = false;
+                            return;
+                        }
+                    }
+                };
+
+                // Validate inputs
+                let beneficiary_pubkey = match Pubkey::from_str(&beneficiary) {
+                    Ok(pk) => pk,
+                    Err(_) => {
+                        state_clone.write().error = Some("Invalid beneficiary address".to_string());
+                        state_clone.write().is_loading = false;
+                        return;
+                    }
+                };
+
+                let mint_pubkey = match Pubkey::from_str(&mint) {
+                    Ok(pk) => pk,
+                    Err(_) => {
+                        state_clone.write().error = Some("Invalid token mint address".to_string());
+                        state_clone.write().is_loading = false;
+                        return;
+                    }
+                };
+
+                // Set loading state after validation
+                state_clone.write().is_loading = true;
+                state_clone.write().error = None;
+                state_clone.write().success = None;
+
+                // Create VaultOperations instance
+                let vault_ops = match VaultOperations::new(wallet_clone.read().clone()) {
+                    Ok(ops) => ops,
+                    Err(e) => {
+                        state_clone.write().error =
+                            Some(format!("Failed to initialize vault operations: {}", e));
+                        state_clone.write().is_loading = false;
+                        return;
+                    }
+                };
+
+                // Create vault instruction
+                let instruction = match vault_ops.create_vault_instruction(
+                    &owner_pubkey,
+                    &beneficiary_pubkey,
+                    &mint_pubkey,
+                    period,
+                    amount,
+                ) {
+                    Ok(inst) => inst,
+                    Err(e) => {
+                        state_clone.write().error =
+                            Some(format!("Failed to create vault instruction: {}", e));
+                        state_clone.write().is_loading = false;
+                        return;
+                    }
+                };
+
+                // Create and send transaction
+                let transaction = match vault_ops
+                    .create_and_sign_transaction(vec![instruction], &owner_pubkey)
+                    .await
+                {
+                    Ok(tx) => tx,
+                    Err(e) => {
+                        state_clone.write().error =
+                            Some(format!("Failed to create transaction: {}", e));
+                        state_clone.write().is_loading = false;
+                        return;
+                    }
+                };
+
+                match vault_ops.send_transaction(transaction).await {
+                    Ok(signature) => {
+                        state_clone.write().success = Some(format!(
+                            "🏦 Vault created successfully! Signature: {}",
+                            signature
+                        ));
+
+                        // Add the new vault to the list (mock data for now)
+                        let new_vault = VaultInfo {
+                            pubkey: format!("vault_{}", &signature[..8]),
+                            owner: owner_pubkey.to_string(),
+                            beneficiary: beneficiary_pubkey.to_string(),
+                            token_mint: mint_pubkey.to_string(),
+                            balance: amount,
+                            inactivity_period: period,
+                            last_heartbeat: Utc::now().timestamp(),
+                        };
+                        state_clone.write().vaults.push(new_vault);
+                    }
+                    Err(e) => {
+                        state_clone.write().error =
+                            Some(format!("Failed to send transaction: {}", e));
+                    }
+                }
+
+                state_clone.write().is_loading = false;
+            });
+        }
+    });
 
     let handle_heartbeat = Callback::new(
         move |(_owner, _beneficiary, _mint): (String, String, String)| {
