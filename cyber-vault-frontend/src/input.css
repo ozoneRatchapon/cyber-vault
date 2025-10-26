@@ -227,6 +227,89 @@ h3 {
     animation: spin 0.8s linear infinite;
 }
 
+.cyber-loading-large {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--border);
+    border-top: 3px solid var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+/* Success animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in-up {
+    animation: fadeInUp 0.3s ease-out;
+}
+
+/* Pulse effect for important elements */
+@keyframes pulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Glow effect */
+@keyframes glow {
+    0%,
+    100% {
+        box-shadow: 0 0 5px var(--primary);
+    }
+    50% {
+        box-shadow:
+            0 0 20px var(--primary),
+            0 0 30px var(--primary);
+    }
+}
+
+.glow {
+    animation: glow 2s ease-in-out infinite;
+}
+
+/* Token hover effects */
+.token-option {
+    transition: all 0.2s ease;
+}
+
+.token-option:hover {
+    transform: translateX(4px);
+}
+
+/* Smooth slide animations */
+.slide-in {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
 @keyframes spin {
     0% {
         transform: rotate(0deg);
@@ -259,16 +342,48 @@ h3 {
     position: relative;
     cursor: pointer;
     user-select: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .vault-card.selected {
     border-color: var(--primary);
     background-color: var(--bg-tertiary);
+    transform: scale(1.02);
 }
 
 .vault-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: 0 12px 24px rgba(0, 188, 212, 0.15);
+}
+
+.vault-card:active {
+    transform: translateY(-2px) scale(1.01);
+}
+
+/* Enhanced button interactions */
+.cyber-button {
+    position: relative;
+    overflow: hidden;
+}
+
+.cyber-button::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    transform: translate(-50%, -50%);
+    transition:
+        width 0.3s,
+        height 0.3s;
+}
+
+.cyber-button:hover::before {
+    width: 300px;
+    height: 300px;
 }
 
 .status-badge {
@@ -309,6 +424,55 @@ h3 {
     position: sticky;
     top: 0;
     z-index: 100;
+    backdrop-filter: blur(10px);
+    background-color: rgba(22, 27, 34, 0.95);
+}
+
+/* Notification animations */
+.notification-enter {
+    animation: notificationSlideIn 0.3s ease-out;
+}
+
+.notification-exit {
+    animation: notificationSlideOut 0.3s ease-in;
+}
+
+@keyframes notificationSlideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes notificationSlideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+/* Dropdown animations */
+.dropdown-enter {
+    animation: dropdownSlideIn 0.2s ease-out;
+}
+
+@keyframes dropdownSlideIn {
+    from {
+        transform: translateY(-10px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
 /* Responsive */

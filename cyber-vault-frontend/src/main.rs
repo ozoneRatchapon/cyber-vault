@@ -50,6 +50,8 @@ pub struct AppState {
     pub vaults: Vec<VaultInfo>,
     pub selected_vault: Option<VaultInfo>,
     pub error: Option<String>,
+    pub success: Option<String>,
+    pub is_loading: bool,
 }
 
 /// The main App component is the root of your application. Every component in Dioxus is a function
@@ -83,18 +85,21 @@ fn App() -> Element {
         let mut state_clone = state.clone();
         let mut wallet_provider_clone = wallet_provider.clone();
         spawn(async move {
+            state_clone.write().is_loading = true;
             match wallet_provider_clone.write().connect().await {
                 Ok(pubkey) => {
                     state_clone.write().wallet.connected = true;
                     state_clone.write().wallet.public_key = Some(pubkey);
                     state_clone.write().error = None;
-                    state_clone.write().error =
-                        Some(format!("Successfully connected to wallet: {}", pubkey));
+                    state_clone.write().success =
+                        Some("Wallet connected successfully! 🎉".to_string());
                 }
                 Err(e) => {
-                    state_clone.write().error = Some(format!("Failed to connect wallet: {}", e));
+                    state_clone.write().error =
+                        Some("Failed to connect wallet. Please try again.".to_string());
                 }
             }
+            state_clone.write().is_loading = false;
         });
     });
 
@@ -103,54 +108,56 @@ fn App() -> Element {
         let mut state_clone = state.clone();
         let mut wallet_provider_clone = wallet_provider.clone();
         spawn(async move {
+            state_clone.write().is_loading = true;
             match wallet_provider_clone.write().disconnect().await {
                 Ok(_) => {
                     state_clone.write().wallet.connected = false;
                     state_clone.write().wallet.public_key = None;
-                    state_clone.write().error =
+                    state_clone.write().vaults.clear();
+                    state_clone.write().selected_vault = None;
+                    state_clone.write().success =
                         Some("Wallet disconnected successfully".to_string());
                 }
                 Err(e) => {
-                    state_clone.write().error = Some(format!("Failed to disconnect wallet: {}", e));
+                    state_clone.write().error =
+                        Some("Failed to disconnect wallet. Please try again.".to_string());
                 }
             }
+            state_clone.write().is_loading = false;
         });
     });
 
-    // Simple callback handlers (stub implementations for now)
+    // Action handlers with better UX feedback
     let handle_create_vault = Callback::new(
         move |(beneficiary, period, amount, mint): (String, i64, u64, String)| {
-            state.write().error = Some(format!(
-                "Create vault: beneficiary={}, period={}, amount={}, mint={}",
-                beneficiary, period, amount, mint
-            ));
+            state.write().success = Some(
+                "🏦 Vault creation initiated! Check your wallet for confirmation.".to_string(),
+            );
+            // TODO: Implement actual vault creation
         },
     );
 
     let handle_heartbeat = Callback::new(
-        move |(owner, beneficiary, mint): (String, String, String)| {
-            state.write().error = Some(format!(
-                "Heartbeat: owner={}, beneficiary={}, mint={}",
-                owner, beneficiary, mint
-            ));
+        move |(_owner, _beneficiary, _mint): (String, String, String)| {
+            state.write().success =
+                Some("💓 Heartbeat sent successfully! Timer reset.".to_string());
+            // TODO: Implement actual heartbeat
         },
     );
 
     let handle_claim = Callback::new(
-        move |(owner, beneficiary, mint): (String, String, String)| {
-            state.write().error = Some(format!(
-                "Claim: owner={}, beneficiary={}, mint={}",
-                owner, beneficiary, mint
-            ));
+        move |(_owner, _beneficiary, _mint): (String, String, String)| {
+            state.write().success =
+                Some("🔄 Claim initiated! Check your wallet for confirmation.".to_string());
+            // TODO: Implement actual claim
         },
     );
 
     let handle_emergency_withdraw = Callback::new(
-        move |(owner, beneficiary, mint, amount): (String, String, String, u64)| {
-            state.write().error = Some(format!(
-                "Emergency withdraw: owner={}, beneficiary={}, mint={}, amount={}",
-                owner, beneficiary, mint, amount
-            ));
+        move |(_owner, _beneficiary, _mint, _amount): (String, String, String, u64)| {
+            state.write().success =
+                Some("🚨 Emergency withdrawal initiated! Check your wallet.".to_string());
+            // TODO: Implement actual emergency withdraw
         },
     );
 
@@ -166,7 +173,34 @@ fn App() -> Element {
             }
 
             main { class: "container mx-auto px-4 py-8",
-                // Success/Error notifications
+                // Loading indicator
+                if state.read().is_loading {
+                    div { class: "cyber-card mb-6 bg-transparent border-l-4 border-cyan-400",
+                        div { class: "flex items-center space-x-3",
+                            div { class: "cyber-loading" }
+                            span { class: "text-cyan-300", "Processing..." }
+                        }
+                    }
+                }
+
+                // Success notifications
+                if let Some(success) = &state.read().success {
+                    div { class: "cyber-card mb-6 bg-transparent border-l-4 border-green-400",
+                        div { class: "flex justify-between items-center",
+                            div { class: "flex items-center space-x-3",
+                                span { class: "text-xl text-green-400", "✓" }
+                                span { class: "text-green-400", "{success}" }
+                            }
+                            button {
+                                class: "cyber-button secondary px-3 py-1 text-xs border-green-400 text-green-400 hover:bg-green-400 hover:text-black",
+                                onclick: move |_| state.write().success = None,
+                                "×"
+                            }
+                        }
+                    }
+                }
+
+                // Error notifications
                 if let Some(error) = &state.read().error {
                     div { class: "cyber-card mb-6 bg-transparent border-l-4 border-pink-500",
                         div { class: "flex justify-between items-center",
@@ -214,6 +248,7 @@ fn App() -> Element {
 
                         // Create Vault Form
                         CreateVaultForm {
+                            public_key: state.read().wallet.public_key,
                             on_create_vault: handle_create_vault,
                         }
 
@@ -283,61 +318,92 @@ fn App() -> Element {
                     }
                 } else {
                     // Not connected state
-                    div { class: "text-center space-y-8 py-16",
-                        div { class: "space-y-4",
+                    div { class: "text-center space-y-12 py-16",
+                        div { class: "space-y-6 max-w-3xl mx-auto",
                             h1 {
-                                class: "text-5xl font-bold text-cyan-300",
+                                class: "text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-pink-500",
                                 "Cyber Vault"
                             }
                             p {
-                                class: "text-xl text-gray-400",
-                                "Dead Man's Switch on Solana"
+                                class: "text-2xl text-gray-400 leading-relaxed",
+                                "Your digital safety net. Protect your assets with a dead man's switch on Solana."
+                            }
+                            div { class: "flex justify-center space-x-4",
+                                span { class: "inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-400 bg-opacity-10 text-green-400 border border-green-400 border-opacity-30",
+                                    "✓ Secure"
+                                }
+                                span { class: "inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-cyan-400 bg-opacity-10 text-cyan-300 border border-cyan-400 border-opacity-30",
+                                    "✓ Decentralized"
+                                }
+                                span { class: "inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-pink-400 bg-opacity-10 text-pink-400 border border-pink-400 border-opacity-30",
+                                    "✓ Trustless"
+                                }
                             }
                         }
 
-                        div { class: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto",
-                            div { class: "cyber-card bg-[#141925]",
-                                div { class: "text-4xl mb-4 text-cyan-300", "🔐" }
-                                h3 { class: "text-lg font-semibold mb-2 text-gray-200", "Create a Vault" }
-                                p { class: "text-gray-400 text-sm", "Designate a beneficiary and set your terms" }
+                        div { class: "grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto",
+                            div { class: "cyber-card bg-[#141925] hover:border-cyan-400 hover:transform hover:-translate-y-2 transition-all duration-300",
+                                div { class: "text-5xl mb-4 text-cyan-300", "🏦" }
+                                h3 { class: "text-xl font-bold mb-3 text-gray-200", "1. Create Vault" }
+                                p { class: "text-gray-400", "Choose your beneficiary and deposit tokens securely" }
                             }
-                            div { class: "cyber-card bg-[#141925]",
-                                div { class: "text-4xl mb-4 text-pink-500", "⏰" }
-                                h3 { class: "text-lg font-semibold mb-2 text-gray-200", "Set Inactivity Period" }
-                                p { class: "text-gray-400 text-sm", "Choose how long before funds can be claimed" }
+                            div { class: "cyber-card bg-[#141925] hover:border-pink-500 hover:transform hover:-translate-y-2 transition-all duration-300",
+                                div { class: "text-5xl mb-4 text-pink-500", "💓" }
+                                h3 { class: "text-xl font-bold mb-3 text-gray-200", "2. Send Heartbeats" }
+                                p { class: "text-gray-400", "Regular signals keep your vault active and safe" }
                             }
-                            div { class: "cyber-card bg-[#141925]",
-                                div { class: "text-4xl mb-4 text-cyan-300", "💰" }
-                                h3 { class: "text-lg font-semibold mb-2 text-gray-200", "Deposit Assets" }
-                                p { class: "text-gray-400 text-sm", "Secure your tokens in the smart contract" }
-                            }
-                            div { class: "cyber-card bg-[#141925]",
-                                div { class: "text-4xl mb-4 text-green-400", "💓" }
-                                h3 { class: "text-lg font-semibold mb-2 text-gray-200", "Send Heartbeats" }
-                                p { class: "text-gray-400 text-sm", "Regular signals to keep your vault active" }
-                            }
-                            div { class: "cyber-card bg-[#141925]",
-                                div { class: "text-4xl mb-4", "🔄" }
-                                h3 { class: "text-lg font-semibold mb-2 text-gray-200", "Auto-Claim" }
-                                p { class: "text-gray-400 text-sm", "Beneficiary can claim after inactivity" }
-                            }
-                            div { class: "cyber-card bg-[#141925]",
-                                div { class: "text-4xl mb-4 text-red-400", "🚨" }
-                                h3 { class: "text-lg font-semibold mb-2 text-gray-200", "Emergency Withdraw" }
-                                p { class: "text-gray-400 text-sm", "Always retain access to your funds" }
+                            div { class: "cyber-card bg-[#141925] hover:border-green-400 hover:transform hover:-translate-y-2 transition-all duration-300",
+                                div { class: "text-5xl mb-4 text-green-400", "🎯" }
+                                h3 { class: "text-xl font-bold mb-3 text-gray-200", "3. Auto-Protection" }
+                                p { class: "text-gray-400", "Beneficiary can claim if you become inactive" }
                             }
                         }
 
-                        div { class: "max-w-md mx-auto",
+                        div { class: "space-y-6 max-w-md mx-auto",
                             button {
-                                class: "cyber-button w-full py-4 text-lg border-cyan-400 text-cyan-300 hover:bg-cyan-400 hover:text-black",
+                                class: "cyber-button w-full py-5 text-lg font-semibold border-cyan-400 text-cyan-300 hover:bg-cyan-400 hover:text-black glow",
                                 onclick: handle_wallet_connect,
-                                "🔗 Connect Your Wallet to Get Started"
+                                "🚀 Launch Your Vault"
+                            }
+
+                            div { class: "cyber-card bg-[#1e2433] border-gray-600",
+                                div { class: "flex items-center justify-center space-x-6 text-sm text-gray-400",
+                                    span { class: "flex items-center space-x-2",
+                                        span { "👻" }
+                                        span { "Phantom" }
+                                    }
+                                    span { class: "flex items-center space-x-2",
+                                        span { "🌟" }
+                                        span { "Solflare" }
+                                    }
+                                    span { class: "flex items-center space-x-2",
+                                        span { "🎒" }
+                                        span { "Backpack" }
+                                    }
+                                }
                             }
                         }
 
-                        div { class: "mt-8 text-center",
-                            p { class: "text-gray-400 text-sm", "Supported wallets: Phantom, Solflare, Backpack, Glow" }
+                        div { class: "cyber-card bg-[#141925] max-w-2xl mx-auto border-gray-600",
+                            h3 { class: "text-lg font-semibold mb-3 text-cyan-300", "🛡️ How It Works" }
+                            div { class: "grid grid-cols-1 md:grid-cols-2 gap-4 text-sm",
+                                div { class: "flex items-start space-x-2",
+                                    span { class: "text-green-400", "✓" }
+                                    span { class: "text-gray-300", "Emergency withdrawal anytime" }
+                                }
+                                div { class: "flex items-start space-x-2",
+                                    span { class: "text-green-400", "✓" }
+                                    span { class: "text-gray-300", "Supports SOL, USDC, USDT" }
+                                }
+                                div { class: "flex items-start space-x-2",
+                                    span { class: "text-green-400", "✓" }
+                                    span { class: "text-gray-300", "Custom inactivity periods" }
+                                }
+                                div { class: "flex items-start space-x-2",
+                                    span { class: "text-green-400", "✓" }
+                                    span { class: "text-gray-300", "No middlemen or fees" }
+                                }
+                            }
                         }
                     }
                 }

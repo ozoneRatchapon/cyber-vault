@@ -3,12 +3,14 @@
 
 mod create_vault_form;
 mod header;
+mod token_selector;
 pub mod ui;
 mod vault_list;
 mod wallet_connector;
 
 pub use create_vault_form::CreateVaultForm;
 pub use header::Header;
+pub use token_selector::TokenSelector;
 pub use vault_list::VaultList;
 // pub use wallet_connector::WalletConnector; // Currently unused
 

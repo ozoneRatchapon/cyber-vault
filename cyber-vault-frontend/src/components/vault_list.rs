@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use crate::components::token_selector::{TokenInfo, get_common_tokens};
 
 #[component]
 pub fn VaultList(
@@ -28,19 +29,63 @@ pub fn VaultList(
                         let is_selected = selected_vault.as_ref().map_or(false, |v| v.pubkey == vault.pubkey);
                         let vault_clone = vault.clone();
 
+                        // Find token info for this mint
+                        let tokens = get_common_tokens();
+                        let token_info = tokens.iter().find(|t| t.mint == vault.token_mint);
+                        let token_icon = token_info.map(|t| t.icon.as_str()).unwrap_or("🪙");
+                        let token_symbol = token_info.map(|t| t.symbol.as_str()).unwrap_or("UNKNOWN");
+
+                        // Calculate display balance based on token decimals
+                        let display_balance = if let Some(token) = token_info {
+                            vault.balance as f64 / 10_f64.powi(token.decimals as i32)
+                        } else {
+                            vault.balance as f64 / 1_000_000.0 // Default to 6 decimals
+                        };
+
+                        // Format beneficiary address
+                        let beneficiary_short = if vault.beneficiary.len() > 8 {
+                            format!("{}...{}", &vault.beneficiary[..4], &vault.beneficiary[vault.beneficiary.len()-4..])
+                        } else {
+                            vault.beneficiary.clone()
+                        };
+
                         rsx! {
                             div {
                                 class: if is_selected {
-                                    "cyber-card bg-[#1e2433] border-cyan-400"
+                                    "cyber-card bg-[#1e2433] border-cyan-400 cursor-pointer"
                                 } else {
-                                    "cyber-card bg-[#141925] border-[#2a3441] hover:border-cyan-400 hover:transform hover:-translate-y-1"
+                                    "cyber-card bg-[#141925] border-[#2a3441] hover:border-cyan-400 hover:transform hover:-translate-y-1 cursor-pointer"
                                 },
                                 onclick: move |_| on_select.call(vault_clone.clone()),
 
-                                div { class: "text-xl mb-2 text-cyan-300", "🏦" }
-                                div { class: "text-base font-medium text-gray-200", "Vault #{index + 1}" }
-                                div { class: "text-sm text-gray-400", "Balance: {vault.balance / 1000000}" }
-                                div { class: "text-xs text-pink-500 font-mono", "{&vault.beneficiary[..8]}..." }
+                                div { class: "flex items-start justify-between mb-3",
+                                    div { class: "flex items-center space-x-2",
+                                        span { class: "text-2xl", "{token_icon}" }
+                                        span { class: "text-lg font-bold text-cyan-300", "Vault #{index + 1}" }
+                                    }
+                                    if is_selected {
+                                        span { class: "text-green-400 text-sm", "● SELECTED" }
+                                    }
+                                }
+
+                                div { class: "space-y-2",
+                                    div { class: "flex items-center justify-between",
+                                        span { class: "text-sm text-gray-400", "Balance:" }
+                                        span { class: "text-lg font-semibold text-gray-200",
+                                            "{display_balance:.4} {token_symbol}"
+                                        }
+                                    }
+
+                                    div { class: "flex items-center justify-between",
+                                        span { class: "text-sm text-gray-400", "Beneficiary:" }
+                                        span { class: "text-xs text-pink-500 font-mono", "{beneficiary_short}" }
+                                    }
+
+                                    div { class: "flex items-center justify-between",
+                                        span { class: "text-sm text-gray-400", "Token:" }
+                                        span { class: "text-sm text-gray-300", "{token_symbol}" }
+                                    }
+                                }
                             }
                         }
                     })}

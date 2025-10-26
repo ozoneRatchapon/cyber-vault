@@ -1,3 +1,4 @@
+use crate::components::token_selector::{TokenInfo, TokenSelector};
 use dioxus::prelude::*;
 use solana_sdk::pubkey::Pubkey;
 use std::str::FromStr;
@@ -10,7 +11,7 @@ pub fn CreateVaultForm(
     let mut beneficiary = use_signal(|| String::new());
     let mut inactivity_days = use_signal(|| 30);
     let mut amount = use_signal(|| String::new());
-    let mut token_mint = use_signal(|| "So11111111111111111111111111111111111111112".to_string()); // WSOL by default
+    let mut selected_token = use_signal(|| Some(TokenInfo::wrapped_sol()));
     let mut form_error = use_signal(|| String::new());
     let mut is_creating = use_signal(|| false);
 
@@ -49,9 +50,16 @@ pub fn CreateVaultForm(
             return;
         }
 
-        // Validate token mint
-        let mint_str = token_mint.read().clone();
-        if Pubkey::from_str(&mint_str).is_err() {
+        // Validate selected token
+        let token_info = match selected_token.read().as_ref() {
+            Some(token) => token.clone(),
+            None => {
+                form_error.set("Please select a token".to_string());
+                return;
+            }
+        };
+
+        if Pubkey::from_str(&token_info.mint).is_err() {
             form_error.set("Invalid token mint address".to_string());
             return;
         }
@@ -73,13 +81,13 @@ pub fn CreateVaultForm(
 
         is_creating.set(true);
         let beneficiary_clone = beneficiary_str.clone();
-        let mint_clone = mint_str.clone();
+        let token_info_clone = token_info.clone();
 
         on_create_vault.call((
             beneficiary_clone,
             days as i64 * 86400,
             amount_value,
-            mint_clone,
+            token_info_clone.mint,
         ));
 
         // Reset form after a delay
@@ -88,6 +96,7 @@ pub fn CreateVaultForm(
             beneficiary.set(String::new());
             amount.set(String::new());
             inactivity_days.set(30);
+            selected_token.set(Some(TokenInfo::wrapped_sol()));
             is_creating.set(false);
         });
     };
@@ -130,27 +139,21 @@ pub fn CreateVaultForm(
                     }
                 }
 
-                // Token Mint
+                // Token Selection
                 div {
                     label { class: "form-label flex items-center space-x-2 text-gray-200",
                         span { class: "text-lg", "🪙" }
-                        span { "Token Mint Address" }
+                        span { "Select Token" }
                     }
-                    div { class: "relative",
-                        input {
-                            r#type: "text",
-                            class: "cyber-input border-b border-cyan-400 bg-transparent",
-                            placeholder: "Token mint address...",
-                            value: "{token_mint}",
-                            oninput: move |e| token_mint.set(e.value()),
-                            disabled: *is_creating.read()
-                        }
+                    TokenSelector {
+                        selected_token: selected_token.read().clone(),
+                        on_token_select: Callback::new(move |token: TokenInfo| {
+                            selected_token.set(Some(token));
+                        }),
+                        disabled: *is_creating.read()
                     }
-                    div { class: "flex items-center space-x-3 mt-3",
-                        div { class: "cyber-button px-3 py-1 text-xs border-cyan-400 text-cyan-300 hover:bg-cyan-400 hover:text-black", "WSOL" }
-                        p { class: "text-xs text-gray-400",
-                            "Default: Wrapped SOL"
-                        }
+                    div { class: "mt-2 text-xs text-gray-400",
+                        "Choose the token to deposit in your vault"
                     }
                 }
 
@@ -189,6 +192,9 @@ pub fn CreateVaultForm(
                     label { class: "form-label flex items-center space-x-2 text-gray-200",
                         span { class: "text-lg", "💰" }
                         span { "Amount to Deposit" }
+                        if let Some(token) = selected_token.read().as_ref() {
+                            span { class: "text-sm text-cyan-300 ml-2", "({token.symbol})" }
+                        }
                     }
                     div { class: "relative",
                         input {
