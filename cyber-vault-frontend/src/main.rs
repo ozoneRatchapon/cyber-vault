@@ -157,12 +157,7 @@ fn App() -> Element {
     rsx! {
         document::Stylesheet { href: CSS }
 
-        div { class: "min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 text-white",
-            // Background pattern
-            div { class: "fixed inset-0 opacity-10",
-                div { class: "absolute inset-0" }
-            }
-
+        div { class: "min-h-screen bg-[#0A0F1A] text-gray-200",
             Header {
                 wallet_connected: state.read().wallet.connected,
                 public_key: state.read().wallet.public_key,
@@ -170,17 +165,17 @@ fn App() -> Element {
                 on_disconnect: handle_wallet_disconnect,
             }
 
-            main { class: "container mx-auto px-4 py-8 relative z-10",
+            main { class: "container mx-auto px-4 py-8",
                 // Success/Error notifications
                 if let Some(error) = &state.read().error {
-                    div { class: "bg-red-500 border-red-600 border text-white p-4 rounded-lg mb-6 shadow-lg",
+                    div { class: "cyber-card mb-6 bg-transparent border-l-4 border-pink-500",
                         div { class: "flex justify-between items-center",
-                            div { class: "flex items-center space-x-2",
-                                span { class: "text-xl", "⚠️" }
-                                span { "{error}" }
+                            div { class: "flex items-center space-x-3",
+                                span { class: "text-xl text-pink-500", "⚠️" }
+                                span { class: "text-pink-500", "{error}" }
                             }
                             button {
-                                class: "text-white hover:text-gray-200 transition-colors",
+                                class: "cyber-button secondary px-3 py-1 text-xs border-pink-500 text-pink-500 hover:bg-pink-500 hover:text-black",
                                 onclick: move |_| state.write().error = None,
                                 "×"
                             }
@@ -192,12 +187,15 @@ fn App() -> Element {
                 if state.read().wallet.connected {
                     div { class: "space-y-8",
                         // Connected wallet info
-                        div { class: "bg-gray-800 bg-opacity-90 backdrop-blur-sm rounded-xl p-6 shadow-xl border border-gray-700",
-                            h2 { class: "text-2xl font-bold mb-4 text-green-400", "Wallet Connected" }
+                        div { class: "cyber-card bg-[#141925]",
+                            h2 {
+                                class: "text-2xl mb-4 text-cyan-300 font-semibold",
+                                "✓ Wallet Connected"
+                            }
                             if let Some(pubkey) = &state.read().wallet.public_key {
                                 div { class: "space-y-2",
                                     p { class: "text-gray-300", "Public Key:" }
-                                    p { class: "font-mono text-sm break-all text-blue-300",
+                                    p { class: "font-mono text-sm break-all text-cyan-300",
                                         "{format_public_key(pubkey)}"
                                     }
                                 }
@@ -205,6 +203,7 @@ fn App() -> Element {
                         }
 
                         // Vault Management
+                        // Vault List (when available)
                         VaultList {
                             vaults: state.read().vaults.clone(),
                             selected_vault: state.read().selected_vault.clone(),
@@ -220,12 +219,15 @@ fn App() -> Element {
 
                         // Vault Actions (when a vault is selected)
                         if let Some(selected_vault) = state.read().selected_vault.clone() {
-                            div { class: "bg-gray-800 bg-opacity-90 backdrop-blur-sm rounded-xl p-6 shadow-xl border border-gray-700",
-                                h3 { class: "text-xl font-bold mb-4 text-yellow-400", "Vault Actions" }
+                            div { class: "cyber-card bg-[#141925]",
+                                h3 {
+                                    class: "text-xl mb-6 text-pink-500 font-semibold",
+                                    "🎯 Vault Actions"
+                                }
 
                                 div { class: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4",
                                     button {
-                                        class: "bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors",
+                                        class: "cyber-button",
                                         onclick: {
                                             let vault = selected_vault.clone();
                                             move |_| {
@@ -240,7 +242,7 @@ fn App() -> Element {
                                     }
 
                                     button {
-                                        class: "bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg transition-colors",
+                                        class: "cyber-button",
                                         onclick: {
                                             let vault = selected_vault.clone();
                                             move |_| {
@@ -255,7 +257,7 @@ fn App() -> Element {
                                     }
 
                                     button {
-                                        class: "bg-orange-600 hover:bg-orange-700 text-white font-medium py-3 px-4 rounded-lg transition-colors",
+                                        class: "cyber-button",
                                         onclick: {
                                             let vault = selected_vault.clone();
                                             move |_| {
@@ -271,9 +273,9 @@ fn App() -> Element {
                                     }
 
                                     button {
-                                        class: "bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-lg transition-colors",
+                                        class: "cyber-button secondary",
                                         onclick: move |_| state.write().selected_vault = None,
-                                        "❌ Deselect"
+                                        "Close"
                                     }
                                 }
                             }
@@ -281,54 +283,56 @@ fn App() -> Element {
                     }
                 } else {
                     // Not connected state
-                    div { class: "text-center space-y-8",
+                    div { class: "text-center space-y-8 py-16",
                         div { class: "space-y-4",
-                            h1 { class: "text-6xl font-bold bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent",
+                            h1 {
+                                class: "text-5xl font-bold text-cyan-300",
                                 "Cyber Vault"
                             }
-                            p { class: "text-2xl text-gray-300", "Dead Man's Switch on Solana" }
+                            p {
+                                class: "text-xl text-gray-400",
+                                "Dead Man's Switch on Solana"
+                            }
                         }
 
                         div { class: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto",
-                            div { class: "bg-gray-800 bg-opacity-90 backdrop-blur-sm rounded-xl p-6 shadow-xl border border-gray-700 hover:border-blue-600 transition-all duration-300 transform hover:scale-105",
-                                div { class: "text-4xl mb-4", "🔐" }
-                                h3 { class: "text-xl font-semibold mb-2 text-blue-400", "Create a Vault" }
-                                p { class: "text-gray-300", "Designate a beneficiary and set your terms" }
+                            div { class: "cyber-card bg-[#141925]",
+                                div { class: "text-4xl mb-4 text-cyan-300", "🔐" }
+                                h3 { class: "text-lg font-semibold mb-2 text-gray-200", "Create a Vault" }
+                                p { class: "text-gray-400 text-sm", "Designate a beneficiary and set your terms" }
                             }
-                            div { class: "bg-gray-800 bg-opacity-90 backdrop-blur-sm rounded-xl p-6 shadow-xl border border-gray-700 hover:border-green-600 transition-all duration-300 transform hover:scale-105",
-                                div { class: "text-4xl mb-4", "⏰" }
-                                h3 { class: "text-xl font-semibold mb-2 text-green-400", "Set Inactivity Period" }
-                                p { class: "text-gray-300", "Choose how long before funds can be claimed" }
+                            div { class: "cyber-card bg-[#141925]",
+                                div { class: "text-4xl mb-4 text-pink-500", "⏰" }
+                                h3 { class: "text-lg font-semibold mb-2 text-gray-200", "Set Inactivity Period" }
+                                p { class: "text-gray-400 text-sm", "Choose how long before funds can be claimed" }
                             }
-                            div { class: "bg-gray-800 bg-opacity-90 backdrop-blur-sm rounded-xl p-6 shadow-xl border border-gray-700 hover:border-yellow-600 transition-all duration-300 transform hover:scale-105",
-                                div { class: "text-4xl mb-4", "💰" }
-                                h3 { class: "text-xl font-semibold mb-2 text-yellow-400", "Deposit Assets" }
-                                p { class: "text-gray-300", "Secure your tokens in the smart contract" }
+                            div { class: "cyber-card bg-[#141925]",
+                                div { class: "text-4xl mb-4 text-cyan-300", "💰" }
+                                h3 { class: "text-lg font-semibold mb-2 text-gray-200", "Deposit Assets" }
+                                p { class: "text-gray-400 text-sm", "Secure your tokens in the smart contract" }
                             }
-                            div { class: "bg-gray-800 bg-opacity-90 backdrop-blur-sm rounded-xl p-6 shadow-xl border border-gray-700 hover:border-red-600 transition-all duration-300 transform hover:scale-105",
-                                div { class: "text-4xl mb-4", "💓" }
-                                h3 { class: "text-xl font-semibold mb-2 text-red-400", "Send Heartbeats" }
-                                p { class: "text-gray-300", "Regular signals to keep your vault active" }
+                            div { class: "cyber-card bg-[#141925]",
+                                div { class: "text-4xl mb-4 text-green-400", "💓" }
+                                h3 { class: "text-lg font-semibold mb-2 text-gray-200", "Send Heartbeats" }
+                                p { class: "text-gray-400 text-sm", "Regular signals to keep your vault active" }
                             }
-                            div { class: "bg-gray-800 bg-opacity-90 backdrop-blur-sm rounded-xl p-6 shadow-xl border border-gray-700 hover:border-purple-600 transition-all duration-300 transform hover:scale-105",
+                            div { class: "cyber-card bg-[#141925]",
                                 div { class: "text-4xl mb-4", "🔄" }
-                                h3 { class: "text-xl font-semibold mb-2 text-purple-400", "Auto-Claim" }
-                                p { class: "text-gray-300", "Beneficiary can claim after inactivity" }
+                                h3 { class: "text-lg font-semibold mb-2 text-gray-200", "Auto-Claim" }
+                                p { class: "text-gray-400 text-sm", "Beneficiary can claim after inactivity" }
                             }
-                            div { class: "bg-gray-800 bg-opacity-90 backdrop-blur-sm rounded-xl p-6 shadow-xl border border-gray-700 hover:border-orange-600 transition-all duration-300 transform hover:scale-105",
-                                div { class: "text-4xl mb-4", "🚨" }
-                                h3 { class: "text-xl font-semibold mb-2 text-orange-400", "Emergency Withdraw" }
-                                p { class: "text-gray-300", "Always retain access to your funds" }
+                            div { class: "cyber-card bg-[#141925]",
+                                div { class: "text-4xl mb-4 text-red-400", "🚨" }
+                                h3 { class: "text-lg font-semibold mb-2 text-gray-200", "Emergency Withdraw" }
+                                p { class: "text-gray-400 text-sm", "Always retain access to your funds" }
                             }
                         }
 
-                        div { class: "max-w-2xl mx-auto",
-                            div { class: "bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-1",
-                                button {
-                                    class: "w-full bg-gray-900 hover:bg-gray-800 rounded-lg px-8 py-4 text-xl font-bold transition-all duration-300 transform hover:scale-105",
-                                    onclick: handle_wallet_connect,
-                                    "🔗 Connect Your Wallet to Get Started"
-                                }
+                        div { class: "max-w-md mx-auto",
+                            button {
+                                class: "cyber-button w-full py-4 text-lg border-cyan-400 text-cyan-300 hover:bg-cyan-400 hover:text-black",
+                                onclick: handle_wallet_connect,
+                                "🔗 Connect Your Wallet to Get Started"
                             }
                         }
 

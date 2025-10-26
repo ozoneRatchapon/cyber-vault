@@ -53,14 +53,14 @@ pub fn NotificationCard(
 
     rsx! {
         div {
-            class: "{notification_type.bg_class()} border text-white p-4 rounded-lg shadow-lg animate-pulse backdrop-blur-sm transition-all duration-300 hover:scale-105",
+            class: "cyber-card neon-border scan-line backdrop-blur-sm transition-all duration-300 hover:scale-105 cyber-hover-glow",
             div { class: "flex justify-between items-center",
-                div { class: "flex items-center space-x-3",
-                    span { class: "text-xl", "{notification_type.icon()}" }
-                    span { class: "{notification_type.text_class()} font-medium", "{message}" }
+                div { class: "flex items-center space-x-4",
+                    span { class: "text-2xl neon-text-cyan", "{notification_type.icon()}" }
+                    span { class: "neon-text-cyan font-cyber text-sm", "{message}" }
                 }
                 button {
-                    class: "{notification_type.text_class()} hover:text-white transition-colors text-xl leading-none",
+                    class: "cyber-button px-3 py-2 text-sm neon-text-pink hover:neon-glow",
                     onclick: on_close,
                     title: "Close notification",
                     "×"
@@ -76,7 +76,7 @@ pub fn NotificationContainer(
     on_remove: EventHandler<usize>,
 ) -> Element {
     rsx! {
-        div { class: "fixed top-20 right-4 z-50 space-y-3 max-w-sm",
+        div { class: "fixed top-20 right-4 z-50 space-y-4 max-w-sm",
             for (index, (message, notification_type)) in notifications.iter().enumerate() {
                 NotificationCard {
                     notification_type: notification_type.clone(),

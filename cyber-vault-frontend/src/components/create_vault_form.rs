@@ -93,17 +93,17 @@ pub fn CreateVaultForm(
     };
 
     rsx! {
-        div { class: "bg-gray-800 bg-opacity-90 backdrop-blur-sm rounded-xl p-6 shadow-xl border border-gray-700",
+        div { class: "cyber-card bg-[#141925]",
             div { class: "flex items-center space-x-3 mb-6",
-                div { class: "text-3xl", "🏦" }
-                h2 { class: "text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent", "Create New Vault" }
+                div { class: "text-3xl text-cyan-300", "🏦" }
+                h2 { class: "text-2xl font-semibold text-gray-200", "Create New Vault" }
             }
 
             if !form_error.read().is_empty() {
-                div { class: "bg-red-500 bg-opacity-20 border border-red-500 text-red-200 p-4 rounded-lg mb-4 animate-pulse",
+                div { class: "cyber-card mb-4 bg-transparent border-l-4 border-pink-500",
                     div { class: "flex items-center space-x-2",
-                        span { class: "text-xl", "⚠️" }
-                        span { "{form_error.read()}" }
+                        span { class: "text-lg text-pink-500", "⚠️" }
+                        span { class: "text-pink-500", "{form_error.read()}" }
                     }
                 }
             }
@@ -111,15 +111,15 @@ pub fn CreateVaultForm(
             div { class: "space-y-6",
                 // Beneficiary Address
                 div {
-                    label { class: "block text-sm font-semibold text-gray-300 mb-2 flex items-center space-x-2",
-                        span { "👤" }
+                    label { class: "form-label flex items-center space-x-2 text-gray-200",
+                        span { class: "text-lg", "👤" }
                         span { "Beneficiary Address" }
                     }
                     div { class: "relative",
                         input {
                             r#type: "text",
-                            class: "w-full px-4 py-3 bg-gray-700 bg-opacity-50 border border-gray-600 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-white placeholder-gray-400 transition-all duration-200",
-                            placeholder: "Enter beneficiary public key",
+                            class: "cyber-input border-b border-cyan-400 bg-transparent",
+                            placeholder: "Enter beneficiary public key...",
                             value: "{beneficiary}",
                             oninput: move |e| beneficiary.set(e.value()),
                             disabled: *is_creating.read()
@@ -132,22 +132,22 @@ pub fn CreateVaultForm(
 
                 // Token Mint
                 div {
-                    label { class: "block text-sm font-semibold text-gray-300 mb-2 flex items-center space-x-2",
-                        span { "🪙" }
+                    label { class: "form-label flex items-center space-x-2 text-gray-200",
+                        span { class: "text-lg", "🪙" }
                         span { "Token Mint Address" }
                     }
                     div { class: "relative",
                         input {
                             r#type: "text",
-                            class: "w-full px-4 py-3 bg-gray-700 bg-opacity-50 border border-gray-600 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-white placeholder-gray-400 transition-all duration-200",
-                            placeholder: "Token mint address",
+                            class: "cyber-input border-b border-cyan-400 bg-transparent",
+                            placeholder: "Token mint address...",
                             value: "{token_mint}",
                             oninput: move |e| token_mint.set(e.value()),
                             disabled: *is_creating.read()
                         }
                     }
-                    div { class: "flex items-center space-x-2 mt-2",
-                        div { class: "bg-blue-500 bg-opacity-20 text-blue-300 px-2 py-1 rounded text-xs font-medium", "WSOL" }
+                    div { class: "flex items-center space-x-3 mt-3",
+                        div { class: "cyber-button px-3 py-1 text-xs border-cyan-400 text-cyan-300 hover:bg-cyan-400 hover:text-black", "WSOL" }
                         p { class: "text-xs text-gray-400",
                             "Default: Wrapped SOL"
                         }
@@ -156,17 +156,17 @@ pub fn CreateVaultForm(
 
                 // Inactivity Period
                 div {
-                    label { class: "block text-sm font-semibold text-gray-300 mb-2 flex items-center space-x-2",
-                        span { "⏰" }
+                    label { class: "form-label flex items-center space-x-2 text-gray-200",
+                        span { class: "text-lg", "⏰" }
                         span { "Inactivity Period: {inactivity_days.read()} days" }
                     }
-                    div { class: "space-y-3",
+                    div { class: "space-y-4",
                         input {
                             r#type: "range",
                             min: "1",
                             max: "365",
                             value: "{inactivity_days}",
-                            class: "w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer slider",
+                            class: "w-full h-3 bg-[#1e2433] rounded-none appearance-none cursor-pointer border-cyan-400",
                             oninput: move |e| inactivity_days.set(e.value().parse().unwrap_or(30)),
                             disabled: *is_creating.read()
                         }
@@ -177,8 +177,8 @@ pub fn CreateVaultForm(
                             span { "180d" }
                             span { "365d" }
                         }
-                        div { class: "bg-gray-700 bg-opacity-50 rounded-lg p-3 text-center",
-                            span { class: "text-lg font-bold text-blue-400", "{inactivity_days.read()}" }
+                        div { class: "cyber-card text-center bg-[#1e2433]",
+                            span { class: "text-xl font-semibold text-cyan-300", "{inactivity_days.read()}" }
                             span { class: "text-sm text-gray-400 ml-1", "days" }
                         }
                     }
@@ -186,15 +186,15 @@ pub fn CreateVaultForm(
 
                 // Amount
                 div {
-                    label { class: "block text-sm font-semibold text-gray-300 mb-2 flex items-center space-x-2",
-                        span { "💰" }
+                    label { class: "form-label flex items-center space-x-2 text-gray-200",
+                        span { class: "text-lg", "💰" }
                         span { "Amount to Deposit" }
                     }
                     div { class: "relative",
                         input {
                             r#type: "number",
-                            class: "w-full px-4 py-3 bg-gray-700 bg-opacity-50 border border-gray-600 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-white placeholder-gray-400 transition-all duration-200",
-                            placeholder: "Enter amount",
+                            class: "cyber-input border-b border-cyan-400 bg-transparent",
+                            placeholder: "Enter amount...",
                             value: "{amount}",
                             oninput: move |e| amount.set(e.value()),
                             disabled: *is_creating.read()
@@ -207,14 +207,14 @@ pub fn CreateVaultForm(
 
                 // Submit Button
                 button {
-                    class: "w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 active:from-blue-800 active:to-purple-800 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed px-6 py-4 rounded-lg transition-all duration-200 transform hover:scale-105 font-semibold text-lg shadow-lg disabled:shadow-none",
+                    class: "cyber-button w-full py-3 text-base font-medium disabled:opacity-50 disabled:cursor-not-allowed border-cyan-400 text-cyan-300 hover:bg-cyan-400 hover:text-black",
                     onclick: handle_submit,
                     disabled: *is_creating.read() || beneficiary.read().is_empty() || amount.read().is_empty(),
 
                     if *is_creating.read() {
-                        div { class: "flex items-center justify-center space-x-3",
-                            div { class: "animate-spin rounded-full h-5 w-5 border-b-2 border-white" }
-                            span { "Creating Vault..." }
+                        div { class: "flex items-center justify-center space-x-2",
+                            div { class: "cyber-loading" }
+                            span { "Creating vault..." }
                         }
                     } else {
                         div { class: "flex items-center justify-center space-x-2",
@@ -226,27 +226,27 @@ pub fn CreateVaultForm(
             }
 
             // Info Box
-            div { class: "mt-6 p-4 bg-gray-700 bg-opacity-50 rounded-lg border border-gray-600",
-                h3 { class: "text-sm font-semibold text-yellow-400 mb-3 flex items-center space-x-2",
-                    span { "⚠️" }
+            div { class: "cyber-card mt-6 bg-[#141925]",
+                h3 { class: "text-sm font-semibold mb-3 text-pink-500 flex items-center space-x-2",
+                    span { "text-lg", "⚠️" }
                     span { "Important Information" }
                 }
                 div { class: "grid grid-cols-1 md:grid-cols-2 gap-3",
                     div { class: "flex items-start space-x-2",
-                        span { class: "text-green-400 text-xs mt-0.5", "✓" }
-                        span { class: "text-xs text-gray-300", "Beneficiary can claim after inactivity period" }
+                        span { class: "text-green-400 text-lg mt-0.5", "✓" }
+                        span { class: "text-sm text-gray-400", "Beneficiary can claim after inactivity period" }
                     }
                     div { class: "flex items-start space-x-2",
-                        span { class: "text-blue-400 text-xs mt-0.5", "💓" }
-                        span { class: "text-xs text-gray-300", "Send heartbeats to reset timer" }
+                        span { class: "text-lg mt-0.5", "💓" }
+                        span { class: "text-sm text-gray-400", "Send heartbeats to reset timer" }
                     }
                     div { class: "flex items-start space-x-2",
-                        span { class: "text-red-400 text-xs mt-0.5", "🚨" }
-                        span { class: "text-xs text-gray-300", "Emergency withdraw anytime" }
+                        span { class: "text-lg mt-0.5", "🚨" }
+                        span { class: "text-sm text-gray-400", "Emergency withdraw anytime" }
                     }
                     div { class: "flex items-start space-x-2",
-                        span { class: "text-purple-400 text-xs mt-0.5", "🔒" }
-                        span { class: "text-xs text-gray-300", "Minimum 1 day inactivity" }
+                        span { class: "text-pink-500 text-xs mt-0.5", "🔒" }
+                        span { class: "text-xs text-gray-400", "Minimum 1 day inactivity" }
                     }
                 }
             }
