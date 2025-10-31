@@ -79,7 +79,7 @@ pub fn TokenSelector(
                     if let Some(token) = &selected_token {
                         span { class: "text-green-400 text-lg", "{token.icon}" }
                         span { class: "font-mono text-green-400", "{token.symbol}" }
-                        span { class: "text-xs text-gray-600 font-mono", "0x{&token.mint[..8]}..." }
+                        span { class: "text-xs text-gray-600 font-mono", "{&token.mint[..8]}..." }
                     } else {
                         span { class: "text-gray-600 font-mono", "> SELECT_TOKEN" }
                     }
@@ -116,7 +116,7 @@ pub fn TokenSelector(
                                         div { class: "flex-1",
                                             div { class: "font-mono text-white text-sm", "{token.symbol}" }
                                             div { class: "text-xs text-gray-600 font-mono", "{token.name}" }
-                                            div { class: "text-xs text-gray-700 font-mono mt-1", "0x{&token.mint[..16]}..." }
+                                            div { class: "text-xs text-gray-700 font-mono mt-1", "{&token.mint[..16]}..." }
                                         }
                                     }
                                     if is_selected {

@@ -128,7 +128,7 @@ pub fn CreateVaultForm(
                         input {
                             r#type: "text",
                             class: "cypher-input border-b border-green-400 bg-transparent",
-                            placeholder: "0x...",
+                            placeholder: "Enter Solana address...",
                             value: "{beneficiary}",
                             oninput: move |e| beneficiary.set(e.value()),
                             disabled: *is_creating.read()
