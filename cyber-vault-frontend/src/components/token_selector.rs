@@ -59,14 +59,14 @@ pub fn TokenSelector(
     let tokens = get_common_tokens();
     let selected_display = selected_token
         .as_ref()
-        .map_or("Select token".to_string(), |t| {
-            format!("{} {}", t.icon, t.symbol)
+        .map_or("SELECT_TOKEN".to_string(), |t| {
+            format!("{} {}", t.symbol, t.mint[..8].to_string())
         });
 
     rsx! {
         div { class: "relative",
             button {
-                class: "cyber-input w-full text-left flex items-center justify-between bg-[#1e2433] border-gray-600 hover:border-cyan-400",
+                class: "cypher-input w-full text-left flex items-center justify-between bg-black border-gray-800 hover:border-green-400 font-mono",
                 onclick: move |_| {
                     if !disabled {
                         let current = *is_open.read();
@@ -75,65 +75,68 @@ pub fn TokenSelector(
                 },
                 disabled: disabled,
 
-                div { class: "flex items-center space-x-3",
+                div { class: "flex items-center space-x-3 flex-1",
                     if let Some(token) = &selected_token {
-                        span { class: "text-2xl", "{token.icon}" }
-                        span { class: "font-medium", "{token.symbol}" }
-                        span { class: "text-xs text-gray-400", "{token.name}" }
+                        span { class: "text-green-400 text-lg", "{token.icon}" }
+                        span { class: "font-mono text-green-400", "{token.symbol}" }
+                        span { class: "text-xs text-gray-600 font-mono", "0x{&token.mint[..8]}..." }
                     } else {
-                        span { class: "text-gray-400", "🪙 Select token..." }
+                        span { class: "text-gray-600 font-mono", "> SELECT_TOKEN" }
                     }
                 }
 
-                span { class: "text-gray-400", "▼" }
+                span { class: "text-gray-600 font-mono text-xs", "[▼]" }
             }
 
             if *is_open.read() {
-                div { class: "absolute z-10 w-full mt-2 cyber-card bg-[#141925] border-cyan-400 max-h-60 overflow-y-auto",
-                    div { class: "p-2 border-b border-gray-700",
-                        p { class: "text-xs text-gray-400 font-medium", "POPULAR TOKENS" }
+                div { class: "absolute z-10 w-full mt-2 cypher-card bg-black border border-green-400 max-h-60 overflow-y-auto",
+                    div { class: "px-3 py-2 border-b border-gray-800 bg-black",
+                        p { class: "text-xs text-green-400 font-mono uppercase tracking-wider", "[TOKEN_REGISTRY]" }
                     }
 
-                    {tokens.iter().map(|token| {
+                    {tokens.iter().enumerate().map(|(index, token)| {
                         let token_clone = token.clone();
                         let is_selected = selected_token.as_ref().map_or(false, |t| t.mint == token.mint);
 
                         rsx! {
                             button {
                                 class: if is_selected {
-                                    "w-full cyber-card bg-[#1e2433] border-cyan-400 text-left"
+                                    "w-full cypher-card border-green-400 bg-black text-left border-l-4"
                                 } else {
-                                    "w-full cyber-card bg-[#141925] border-gray-600 hover:bg-[#1e2433] hover:border-cyan-400 text-left"
+                                    "w-full cypher-card border-gray-800 hover:border-green-400 hover:bg-black text-left border-l-4 border-l-transparent"
                                 },
                                 onclick: move |_| {
                                     on_token_select.call(token_clone.clone());
                                     is_open.set(false);
                                 },
 
-                                div { class: "flex items-center justify-between",
-                                    div { class: "flex items-center space-x-3",
-                                        span { class: "text-2xl", "{token.icon}" }
-                                        div {
-                                            div { class: "font-medium text-gray-200", "{token.symbol}" }
-                                            div { class: "text-xs text-gray-400", "{token.name}" }
+                                div { class: "flex items-center justify-between p-3",
+                                    div { class: "flex items-center space-x-3 flex-1",
+                                        span { class: "text-green-400 text-lg", "{token.icon}" }
+                                        div { class: "flex-1",
+                                            div { class: "font-mono text-white text-sm", "{token.symbol}" }
+                                            div { class: "text-xs text-gray-600 font-mono", "{token.name}" }
+                                            div { class: "text-xs text-gray-700 font-mono mt-1", "0x{&token.mint[..16]}..." }
                                         }
                                     }
                                     if is_selected {
-                                        span { class: "text-green-400", "✓" }
+                                        span { class: "text-green-400 font-mono text-xs", "[SELECTED]" }
+                                    } else {
+                                        span { class: "text-gray-600 font-mono text-xs", "[{index + 1:02}]" }
                                     }
                                 }
                             }
                         }
                     })}
 
-                    div { class: "p-2 border-t border-gray-700 mt-2",
+                    div { class: "px-3 py-2 border-t border-gray-800 bg-black mt-2",
                         button {
-                            class: "w-full text-xs text-gray-400 hover:text-cyan-300 text-left",
+                            class: "w-full text-xs text-gray-600 hover:text-green-400 text-left font-mono",
                             onclick: move |_| {
                                 // TODO: Implement custom token input
                                 is_open.set(false);
                             },
-                            "+ Add custom token"
+                            "> ADD_CUSTOM_TOKEN [+] "
                         }
                     }
                 }

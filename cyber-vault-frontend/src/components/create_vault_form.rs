@@ -102,17 +102,17 @@ pub fn CreateVaultForm(
     };
 
     rsx! {
-        div { class: "cyber-card bg-[#141925]",
-            div { class: "flex items-center space-x-3 mb-6",
-                div { class: "text-3xl text-cyan-300", "🏦" }
-                h2 { class: "text-2xl font-semibold text-gray-200", "Create New Vault" }
+        div { class: "cypher-card",
+            div { class: "flex items-center space-x-3 mb-6 border-b border-gray-800 pb-4",
+                div { class: "text-2xl text-green-400 font-mono", "[CREATE]" }
+                h2 { class: "text-xl font-semibold text-white font-mono tracking-wider", "VAULT_PROTOCOL" }
             }
 
             if !form_error.read().is_empty() {
-                div { class: "cyber-card mb-4 bg-transparent border-l-4 border-pink-500",
+                div { class: "cypher-card mb-4 bg-transparent border-l-4 border-gray-400",
                     div { class: "flex items-center space-x-2",
-                        span { class: "text-lg text-pink-500", "⚠️" }
-                        span { class: "text-pink-500", "{form_error.read()}" }
+                        span { class: "text-sm text-gray-400 font-mono", "[ERROR]" }
+                        span { class: "text-gray-400 font-mono text-sm", "{form_error.read()}" }
                     }
                 }
             }
@@ -120,30 +120,30 @@ pub fn CreateVaultForm(
             div { class: "space-y-6",
                 // Beneficiary Address
                 div {
-                    label { class: "form-label flex items-center space-x-2 text-gray-200",
-                        span { class: "text-lg", "👤" }
-                        span { "Beneficiary Address" }
+                    label { class: "form-label flex items-center space-x-2 text-gray-300",
+                        span { class: "text-green-400", "[BENE]" }
+                        span { "BENEFICIARY_ADDRESS" }
                     }
                     div { class: "relative",
                         input {
                             r#type: "text",
-                            class: "cyber-input border-b border-cyan-400 bg-transparent",
-                            placeholder: "Enter beneficiary public key...",
+                            class: "cypher-input border-b border-green-400 bg-transparent",
+                            placeholder: "0x...",
                             value: "{beneficiary}",
                             oninput: move |e| beneficiary.set(e.value()),
                             disabled: *is_creating.read()
                         }
                         if !beneficiary.read().is_empty() {
-                            div { class: "absolute right-3 top-3 text-green-400", "✓" }
+                            div { class: "absolute right-3 top-3 text-green-400 font-mono text-xs", "[+]" }
                         }
                     }
                 }
 
                 // Token Selection
                 div {
-                    label { class: "form-label flex items-center space-x-2 text-gray-200",
-                        span { class: "text-lg", "🪙" }
-                        span { "Select Token" }
+                    label { class: "form-label flex items-center space-x-2 text-gray-300",
+                        span { class: "text-green-400", "[TOKEN]" }
+                        span { "SELECT_TOKEN" }
                     }
                     TokenSelector {
                         selected_token: selected_token.read().clone(),
@@ -152,16 +152,16 @@ pub fn CreateVaultForm(
                         }),
                         disabled: *is_creating.read()
                     }
-                    div { class: "mt-2 text-xs text-gray-400",
-                        "Choose the token to deposit in your vault"
+                    div { class: "mt-2 text-xs text-gray-500 font-mono",
+                        "> Choose token for vault deposit"
                     }
                 }
 
                 // Inactivity Period
                 div {
-                    label { class: "form-label flex items-center space-x-2 text-gray-200",
-                        span { class: "text-lg", "⏰" }
-                        span { "Inactivity Period: {inactivity_days.read()} days" }
+                    label { class: "form-label flex items-center space-x-2 text-gray-300",
+                        span { class: "text-green-400", "[TIME]" }
+                        span { "INACTIVITY_PERIOD: {inactivity_days.read()}_DAYS" }
                     }
                     div { class: "space-y-4",
                         input {
@@ -169,90 +169,90 @@ pub fn CreateVaultForm(
                             min: "1",
                             max: "365",
                             value: "{inactivity_days}",
-                            class: "w-full h-3 bg-[#1e2433] rounded-none appearance-none cursor-pointer border-cyan-400",
+                            class: "w-full h-2 bg-black appearance-none cursor-pointer border border-gray-700",
                             oninput: move |e| inactivity_days.set(e.value().parse().unwrap_or(30)),
                             disabled: *is_creating.read()
                         }
-                        div { class: "flex justify-between text-xs text-gray-400",
-                            span { "1d" }
-                            span { "30d" }
-                            span { "90d" }
-                            span { "180d" }
-                            span { "365d" }
+                        div { class: "flex justify-between text-xs text-gray-500 font-mono",
+                            span { "1D" }
+                            span { "30D" }
+                            span { "90D" }
+                            span { "180D" }
+                            span { "365D" }
                         }
-                        div { class: "cyber-card text-center bg-[#1e2433]",
-                            span { class: "text-xl font-semibold text-cyan-300", "{inactivity_days.read()}" }
-                            span { class: "text-sm text-gray-400 ml-1", "days" }
+                        div { class: "cypher-card text-center bg-black border border-gray-800",
+                            span { class: "text-2xl font-semibold text-green-400 font-mono", "{inactivity_days.read()}" }
+                            span { class: "text-sm text-gray-400 ml-2 font-mono", "DAYS" }
                         }
                     }
                 }
 
                 // Amount
                 div {
-                    label { class: "form-label flex items-center space-x-2 text-gray-200",
-                        span { class: "text-lg", "💰" }
-                        span { "Amount to Deposit" }
+                    label { class: "form-label flex items-center space-x-2 text-gray-300",
+                        span { class: "text-green-400", "[AMNT]" }
+                        span { "DEPOSIT_AMOUNT" }
                         if let Some(token) = selected_token.read().as_ref() {
-                            span { class: "text-sm text-cyan-300 ml-2", "({token.symbol})" }
+                            span { class: "text-sm text-green-400 ml-2 font-mono", "({token.symbol})" }
                         }
                     }
                     div { class: "relative",
                         input {
                             r#type: "number",
-                            class: "cyber-input border-b border-cyan-400 bg-transparent",
-                            placeholder: "Enter amount...",
+                            class: "cypher-input border-b border-green-400 bg-transparent",
+                            placeholder: "0.00",
                             value: "{amount}",
                             oninput: move |e| amount.set(e.value()),
                             disabled: *is_creating.read()
                         }
                         if !amount.read().is_empty() {
-                            div { class: "absolute right-3 top-3 text-green-400", "✓" }
+                            div { class: "absolute right-3 top-3 text-green-400 font-mono text-xs", "[+]" }
                         }
                     }
                 }
 
                 // Submit Button
                 button {
-                    class: "cyber-button w-full py-3 text-base font-medium disabled:opacity-50 disabled:cursor-not-allowed border-cyan-400 text-cyan-300 hover:bg-cyan-400 hover:text-black",
+                    class: "cypher-button w-full py-4 text-base font-medium disabled:opacity-30 disabled:cursor-not-allowed border-green-400 text-green-400 hover:bg-green-400 hover:text-black font-mono uppercase tracking-wider",
                     onclick: handle_submit,
                     disabled: *is_creating.read() || beneficiary.read().is_empty() || amount.read().is_empty(),
 
                     if *is_creating.read() {
                         div { class: "flex items-center justify-center space-x-2",
-                            div { class: "cyber-loading" }
-                            span { "Creating vault..." }
+                            div { class: "cypher-loading" }
+                            span { class: "font-mono", "INITIALIZING_VAULT..." }
                         }
                     } else {
                         div { class: "flex items-center justify-center space-x-2",
-                            span { "🏦" }
-                            span { "Create Vault" }
+                            span { "[CREATE]" }
+                            span { "VAULT" }
                         }
                     }
                 }
             }
 
-            // Info Box
-            div { class: "cyber-card mt-6 bg-[#141925]",
-                h3 { class: "text-sm font-semibold mb-3 text-pink-500 flex items-center space-x-2",
-                    span { "text-lg", "⚠️" }
-                    span { "Important Information" }
+            // Protocol Information
+            div { class: "cypher-card mt-6 bg-black border border-gray-800",
+                h3 { class: "text-sm font-semibold mb-3 text-green-400 flex items-center space-x-2 font-mono uppercase tracking-wider",
+                    span { "[PROTOCOL]" }
+                    span { "SPECIFICATION" }
                 }
                 div { class: "grid grid-cols-1 md:grid-cols-2 gap-3",
                     div { class: "flex items-start space-x-2",
-                        span { class: "text-green-400 text-lg mt-0.5", "✓" }
-                        span { class: "text-sm text-gray-400", "Beneficiary can claim after inactivity period" }
+                        span { class: "text-green-400 text-sm mt-0.5 font-mono", "[+]" }
+                        span { class: "text-xs text-gray-400 font-mono", "Beneficiary claims after inactivity" }
                     }
                     div { class: "flex items-start space-x-2",
-                        span { class: "text-lg mt-0.5", "💓" }
-                        span { class: "text-sm text-gray-400", "Send heartbeats to reset timer" }
+                        span { class: "text-green-400 text-sm mt-0.5 font-mono", "[+]" }
+                        span { class: "text-xs text-gray-400 font-mono", "Send heartbeats to reset timer" }
                     }
                     div { class: "flex items-start space-x-2",
-                        span { class: "text-lg mt-0.5", "🚨" }
-                        span { class: "text-sm text-gray-400", "Emergency withdraw anytime" }
+                        span { class: "text-green-400 text-sm mt-0.5 font-mono", "[+]" }
+                        span { class: "text-xs text-gray-400 font-mono", "Emergency withdrawal available" }
                     }
                     div { class: "flex items-start space-x-2",
-                        span { class: "text-pink-500 text-xs mt-0.5", "🔒" }
-                        span { class: "text-xs text-gray-400", "Minimum 1 day inactivity" }
+                        span { class: "text-gray-400 text-xs mt-0.5 font-mono", "[!]" }
+                        span { class: "text-xs text-gray-400 font-mono", "Minimum 1 day inactivity" }
                     }
                 }
             }

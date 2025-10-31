@@ -2,44 +2,43 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Minimal Cyberpunk Theme */
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap");
+/* Cypherpunk Theme - Trust Through Code */
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap");
 
 :root {
-    /* Clean Cyberpunk Palette */
-    --primary: #00bcd4; /* Clean cyan */
-    --secondary: #7c4dff; /* Soft purple */
-    --accent: #ff6b6b; /* Soft red */
-    --success: #4caf50; /* Green */
-    --warning: #ff9800; /* Orange */
-    --bg-primary: #0d1117; /* GitHub dark */
-    --bg-secondary: #161b22; /* Card background */
-    --bg-tertiary: #21262d; /* Hover states */
-    --text-primary: #f0f6fc; /* Clean white */
-    --text-secondary: #8b949e; /* Muted text */
-    --border: #30363d; /* Subtle borders */
+    /* Cypherpunk Palette - Minimalist & Ideological */
+    --trust-green: #4ade80; /* Hacker green - the single accent color */
+    --bg-primary: #000000; /* Pure black */
+    --bg-secondary: #0a0a0a; /* Very dark grey */
+    --text-primary: #ffffff; /* Pure white */
+    --text-secondary: #d4d4d4; /* Light grey */
+    --text-muted: #a3a3a3; /* Muted grey */
+    --border: #262626; /* Subtle borders */
+    --terminal-green: #22c55e; /* Classic terminal green */
 }
 
-/* Base Styles */
+/* Base Styles - Raw & Functional */
 * {
     transition:
-        background-color 0.2s,
-        border-color 0.2s,
-        color 0.2s;
+        border-color 0.15s,
+        color 0.15s,
+        background-color 0.15s;
 }
 
 body {
     background-color: var(--bg-primary);
-    color: var(--text-primary);
-    font-family: "Inter", sans-serif;
+    color: var(--text-secondary);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 14px;
     line-height: 1.6;
     margin: 0;
     padding: 0;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    letter-spacing: 0.02em;
 }
 
-/* Typography */
+/* Typography - Code-First */
 h1,
 h2,
 h3,
@@ -49,128 +48,166 @@ h6 {
     font-weight: 600;
     line-height: 1.3;
     margin-bottom: 1rem;
+    font-family: "JetBrains Mono", monospace;
+    letter-spacing: -0.02em;
 }
 
 h1 {
-    font-size: 2rem;
+    font-size: 1.75rem;
+    color: var(--text-primary);
 }
 h2 {
-    font-size: 1.5rem;
+    font-size: 1.375rem;
+    color: var(--text-primary);
 }
 h3 {
-    font-size: 1.25rem;
+    font-size: 1.125rem;
+    color: var(--text-primary);
 }
 
-/* Clean Components */
-.cyber-card {
+p {
+    margin-bottom: 1rem;
+    color: var(--text-secondary);
+}
+
+/* Cypherpunk Components - Declassified Document Style */
+.cypher-card {
     background-color: var(--bg-secondary);
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: 0; /* Sharp, no rounded corners */
     padding: 1.5rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    transition: all 0.2s ease;
+    position: relative;
 }
 
-.cyber-card:hover {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 1px var(--primary);
+.cypher-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    background-color: var(--trust-green);
+    opacity: 0;
+    transition: opacity 0.15s ease;
 }
 
-.cyber-button {
-    background-color: var(--primary);
-    color: var(--bg-primary);
-    border: 1px solid var(--primary);
-    border-radius: 6px;
-    padding: 0.75rem 1.5rem;
+.cypher-card:hover::before {
+    opacity: 1;
+}
+
+.cypher-card:hover {
+    border-color: var(--trust-green);
+}
+
+/* Buttons - Sharp & Functional */
+.cypher-button {
+    background-color: transparent;
+    color: var(--trust-green);
+    border: 1px solid var(--trust-green);
+    border-radius: 0;
+    padding: 0.625rem 1.25rem;
     font-weight: 500;
-    font-family: "Inter", sans-serif;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 13px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.15s ease;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
-.cyber-button:hover {
-    background-color: var(--bg-primary);
-    color: var(--primary);
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0, 188, 212, 0.2);
+.cypher-button:hover {
+    background-color: var(--trust-green);
+    color: var(--bg-primary);
 }
 
-.cyber-button:active {
-    transform: translateY(0);
+.cypher-button:active {
+    transform: translateY(1px);
 }
 
-.cyber-button:disabled {
-    opacity: 0.5;
+.cypher-button:disabled {
+    opacity: 0.3;
     cursor: not-allowed;
     transform: none;
 }
 
-.cyber-button.secondary {
+.cypher-button.secondary {
     background-color: transparent;
     color: var(--text-secondary);
     border-color: var(--border);
 }
 
-.cyber-button.secondary:hover {
-    background-color: var(--bg-tertiary);
+.cypher-button.secondary:hover {
+    background-color: var(--bg-secondary);
     color: var(--text-primary);
-    border-color: var(--primary);
+    border-color: var(--text-secondary);
 }
 
-.cyber-input {
-    background-color: var(--bg-tertiary);
+.cypher-button.danger {
+    color: var(--terminal-green);
+    border-color: var(--terminal-green);
+}
+
+.cypher-button.danger:hover {
+    background-color: var(--terminal-green);
+    color: var(--bg-primary);
+}
+
+/* Inputs - Terminal Style */
+.cypher-input {
+    background-color: var(--bg-secondary);
     border: 1px solid var(--border);
-    border-radius: 6px;
+    border-radius: 0;
     padding: 0.75rem 1rem;
     color: var(--text-primary);
-    font-family: "Inter", sans-serif;
-    font-size: 0.95rem;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 13px;
     width: 100%;
-    transition: all 0.2s ease;
+    transition: all 0.15s ease;
 }
 
-.cyber-input:focus {
+.cypher-input:focus {
     outline: none;
-    border-color: var(--primary);
+    border-color: var(--trust-green);
     background-color: var(--bg-primary);
 }
 
-.cyber-input::placeholder {
-    color: var(--text-secondary);
+.cypher-input::placeholder {
+    color: var(--text-muted);
+    font-style: italic;
 }
 
-/* Status Colors */
+/* Status Colors - Trust Indicators */
 .status-success {
-    color: var(--success);
+    color: var(--trust-green);
 }
 .status-warning {
-    color: var(--warning);
+    color: var(--text-secondary);
 }
 .status-error {
-    color: var(--accent);
+    color: var(--text-secondary);
 }
 .status-primary {
-    color: var(--primary);
+    color: var(--trust-green);
 }
 .status-secondary {
-    color: var(--text-secondary);
+    color: var(--text-muted);
 }
 
 .bg-success {
-    background-color: var(--success);
+    background-color: var(--trust-green);
 }
 .bg-warning {
-    background-color: var(--warning);
+    background-color: var(--text-secondary);
 }
 .bg-error {
-    background-color: var(--accent);
+    background-color: var(--text-secondary);
 }
 .bg-primary {
-    background-color: var(--primary);
+    background-color: var(--trust-green);
 }
 
 /* Utility Classes */
@@ -180,21 +217,24 @@ h3 {
 .text-secondary {
     color: var(--text-secondary);
 }
+.text-muted {
+    color: var(--text-muted);
+}
 .bg-card {
     background-color: var(--bg-secondary);
 }
 .bg-hover {
-    background-color: var(--bg-tertiary);
+    background-color: var(--bg-secondary);
 }
 
 .font-mono {
     font-family: "JetBrains Mono", monospace;
 }
 
-/* Scrollbar */
+/* Scrollbar - Terminal Style */
 ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 12px;
+    height: 12px;
 }
 
 ::-webkit-scrollbar-track {
@@ -203,45 +243,43 @@ h3 {
 
 ::-webkit-scrollbar-thumb {
     background: var(--border);
-    border-radius: 4px;
+    border: 2px solid var(--bg-primary);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--primary);
+    background: var(--text-muted);
 }
 
-/* Selection */
+/* Selection - Cypherpunk Green */
 ::selection {
-    background: var(--primary);
+    background: var(--trust-green);
     color: var(--bg-primary);
 }
 
-/* Loading States */
-.cyber-loading {
+/* Loading States - Minimalist */
+.cypher-loading {
     display: inline-block;
-    width: 20px;
-    height: 20px;
+    width: 16px;
+    height: 16px;
     border: 2px solid var(--border);
-    border-top: 2px solid var(--primary);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
+    border-top: 2px solid var(--trust-green);
+    animation: spin 1s linear infinite;
 }
 
-.cyber-loading-large {
+.cypher-loading-large {
     display: inline-block;
-    width: 40px;
-    height: 40px;
-    border: 3px solid var(--border);
-    border-top: 3px solid var(--primary);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
+    width: 32px;
+    height: 32px;
+    border: 2px solid var(--border);
+    border-top: 2px solid var(--trust-green);
+    animation: spin 1s linear infinite;
 }
 
-/* Success animations */
+/* Animations - Subtle & Functional */
 @keyframes fadeInUp {
     from {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(16px);
     }
     to {
         opacity: 1;
@@ -250,64 +288,7 @@ h3 {
 }
 
 .fade-in-up {
-    animation: fadeInUp 0.3s ease-out;
-}
-
-/* Pulse effect for important elements */
-@keyframes pulse {
-    0%,
-    100% {
-        opacity: 1;
-    }
-    50% {
-        opacity: 0.7;
-    }
-}
-
-.pulse {
-    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-/* Glow effect */
-@keyframes glow {
-    0%,
-    100% {
-        box-shadow: 0 0 5px var(--primary);
-    }
-    50% {
-        box-shadow:
-            0 0 20px var(--primary),
-            0 0 30px var(--primary);
-    }
-}
-
-.glow {
-    animation: glow 2s ease-in-out infinite;
-}
-
-/* Token hover effects */
-.token-option {
-    transition: all 0.2s ease;
-}
-
-.token-option:hover {
-    transform: translateX(4px);
-}
-
-/* Smooth slide animations */
-.slide-in {
-    animation: slideIn 0.3s ease-out;
-}
-
-@keyframes slideIn {
-    from {
-        transform: translateX(-100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
+    animation: fadeInUp 0.2s ease-out;
 }
 
 @keyframes spin {
@@ -319,7 +300,7 @@ h3 {
     }
 }
 
-/* Form Layout */
+/* Form Layout - Document Style */
 .form-group {
     margin-bottom: 1.5rem;
 }
@@ -329,94 +310,70 @@ h3 {
     margin-bottom: 0.5rem;
     font-weight: 500;
     color: var(--text-primary);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .form-error {
-    color: var(--accent);
-    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-size: 12px;
     margin-top: 0.25rem;
 }
 
-/* Card Styles */
+/* Card Styles - Declassified Documents */
 .vault-card {
     position: relative;
     cursor: pointer;
     user-select: none;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.15s ease;
 }
 
 .vault-card.selected {
-    border-color: var(--primary);
-    background-color: var(--bg-tertiary);
-    transform: scale(1.02);
+    border-color: var(--trust-green);
+    background-color: var(--bg-secondary);
 }
 
 .vault-card:hover {
-    transform: translateY(-4px) scale(1.01);
-    box-shadow: 0 12px 24px rgba(0, 188, 212, 0.15);
+    border-color: var(--trust-green);
+    transform: translateX(4px);
 }
 
-.vault-card:active {
-    transform: translateY(-2px) scale(1.01);
-}
-
-/* Enhanced button interactions */
-.cyber-button {
-    position: relative;
-    overflow: hidden;
-}
-
-.cyber-button::before {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
-    transform: translate(-50%, -50%);
-    transition:
-        width 0.3s,
-        height 0.3s;
-}
-
-.cyber-button:hover::before {
-    width: 300px;
-    height: 300px;
-}
-
+/* Status Badges - Classified Style */
 .status-badge {
     display: inline-flex;
     align-items: center;
     gap: 0.25rem;
     padding: 0.25rem 0.75rem;
-    border-radius: 12px;
-    font-size: 0.75rem;
-    font-weight: 600;
+    border-radius: 0;
+    font-size: 11px;
+    font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    font-family: "JetBrains Mono", monospace;
+    border: 1px solid;
 }
 
 .status-badge.success {
-    background-color: rgba(76, 175, 80, 0.1);
-    color: var(--success);
-    border: 1px solid rgba(76, 175, 80, 0.2);
+    background-color: transparent;
+    color: var(--trust-green);
+    border-color: var(--trust-green);
 }
 
 .status-badge.error {
-    background-color: rgba(255, 107, 107, 0.1);
-    color: var(--accent);
-    border: 1px solid rgba(255, 107, 107, 0.2);
+    background-color: transparent;
+    color: var(--text-secondary);
+    border-color: var(--text-secondary);
 }
 
 .status-badge.warning {
-    background-color: rgba(255, 152, 0, 0.1);
-    color: var(--warning);
-    border: 1px solid rgba(255, 152, 0, 0.2);
+    background-color: transparent;
+    color: var(--text-secondary);
+    border-color: var(--text-secondary);
 }
 
-/* Header Styles */
+/* Header Styles - Terminal Header */
 .header-nav {
     background-color: var(--bg-secondary);
     border-bottom: 1px solid var(--border);
@@ -424,60 +381,85 @@ h3 {
     position: sticky;
     top: 0;
     z-index: 100;
-    backdrop-filter: blur(10px);
-    background-color: rgba(22, 27, 34, 0.95);
 }
 
-/* Notification animations */
-.notification-enter {
-    animation: notificationSlideIn 0.3s ease-out;
+/* Terminal Dividers */
+.terminal-divider {
+    border: 0;
+    height: 1px;
+    background-color: var(--border);
+    margin: 2rem 0;
+    position: relative;
 }
 
-.notification-exit {
-    animation: notificationSlideOut 0.3s ease-in;
+.terminal-divider::before {
+    content: "◆";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: var(--bg-primary);
+    color: var(--text-muted);
+    padding: 0 0.5rem;
+    font-size: 12px;
 }
 
-@keyframes notificationSlideIn {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
+/* Trust Indicators */
+.trust-indicator {
+    color: var(--trust-green);
+    font-weight: 600;
 }
 
-@keyframes notificationSlideOut {
-    from {
-        transform: translateX(0);
-        opacity: 1;
-    }
-    to {
-        transform: translateX(100%);
-        opacity: 0;
-    }
+/* Address Display - Truncated Terminal Style */
+.address-display {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px;
+    color: var(--trust-green);
+    word-break: break-all;
 }
 
-/* Dropdown animations */
-.dropdown-enter {
-    animation: dropdownSlideIn 0.2s ease-out;
+.address-display::before {
+    content: "0x";
+    opacity: 0.6;
 }
 
-@keyframes dropdownSlideIn {
-    from {
-        transform: translateY(-10px);
-        opacity: 0;
-    }
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
+/* Action Log - Terminal Output */
+.action-log {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 0;
+    padding: 1rem;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px;
+    color: var(--text-secondary);
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.log-entry {
+    margin-bottom: 0.5rem;
+    padding-left: 1rem;
+    position: relative;
+}
+
+.log-entry::before {
+    content: ">";
+    position: absolute;
+    left: 0;
+    color: var(--trust-green);
+}
+
+.log-entry.success {
+    color: var(--trust-green);
+}
+
+.log-entry.error {
+    color: var(--text-secondary);
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-    .cyber-card {
+    .cypher-card {
         padding: 1rem;
     }
 
@@ -490,4 +472,39 @@ h3 {
     h3 {
         font-size: 1.125rem;
     }
+
+    body {
+        font-size: 13px;
+    }
+}
+
+/* Monospace Everything - Trust Through Code */
+* {
+    font-family: "JetBrains Mono", monospace;
+}
+
+/* Exceptions for better readability */
+input,
+textarea,
+button {
+    font-family: "JetBrains Mono", monospace;
+}
+
+/* Code Blocks - Enhanced */
+pre {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 0;
+    padding: 1rem;
+    overflow-x: auto;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px;
+}
+
+code {
+    background-color: var(--bg-secondary);
+    color: var(--trust-green);
+    padding: 0.125rem 0.25rem;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px;
 }

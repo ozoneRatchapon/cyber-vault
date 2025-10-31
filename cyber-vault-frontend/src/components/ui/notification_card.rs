@@ -11,28 +11,37 @@ pub enum NotificationType {
 impl NotificationType {
     pub fn bg_class(&self) -> &'static str {
         match self {
-            NotificationType::Success => "bg-green-500 bg-opacity-20 border-green-500",
-            NotificationType::Error => "bg-red-500 bg-opacity-20 border-red-500",
-            NotificationType::Warning => "bg-yellow-500 bg-opacity-20 border-yellow-500",
-            NotificationType::Info => "bg-blue-500 bg-opacity-20 border-blue-500",
+            NotificationType::Success => "bg-green-400 bg-opacity-10 border-green-400",
+            NotificationType::Error => "bg-gray-400 bg-opacity-10 border-gray-400",
+            NotificationType::Warning => "bg-gray-400 bg-opacity-10 border-gray-400",
+            NotificationType::Info => "bg-gray-400 bg-opacity-10 border-gray-400",
         }
     }
 
     pub fn text_class(&self) -> &'static str {
         match self {
-            NotificationType::Success => "text-green-200",
-            NotificationType::Error => "text-red-200",
-            NotificationType::Warning => "text-yellow-200",
-            NotificationType::Info => "text-blue-200",
+            NotificationType::Success => "text-green-400",
+            NotificationType::Error => "text-gray-400",
+            NotificationType::Warning => "text-gray-400",
+            NotificationType::Info => "text-gray-400",
         }
     }
 
     pub fn icon(&self) -> &'static str {
         match self {
-            NotificationType::Success => "✓",
-            NotificationType::Error => "⚠️",
-            NotificationType::Warning => "⚡",
-            NotificationType::Info => "ℹ️",
+            NotificationType::Success => "[+]",
+            NotificationType::Error => "[!]",
+            NotificationType::Warning => "[#]",
+            NotificationType::Info => "[i]",
+        }
+    }
+
+    pub fn prefix(&self) -> &'static str {
+        match self {
+            NotificationType::Success => "SUCCESS",
+            NotificationType::Error => "ERROR",
+            NotificationType::Warning => "WARNING",
+            NotificationType::Info => "INFO",
         }
     }
 }
@@ -48,22 +57,22 @@ pub fn NotificationCard(
     let should_auto_close = auto_close.unwrap_or(true);
     let close_duration = duration.unwrap_or(5000);
 
-    // Note: Auto-close functionality disabled to avoid MouseEvent complexity
-    // Manual close button provides better user control over notification display
-
     rsx! {
         div {
-            class: "cyber-card neon-border scan-line backdrop-blur-sm transition-all duration-300 hover:scale-105 cyber-hover-glow",
-            div { class: "flex justify-between items-center",
-                div { class: "flex items-center space-x-4",
-                    span { class: "text-2xl neon-text-cyan", "{notification_type.icon()}" }
-                    span { class: "neon-text-cyan font-cyber text-sm", "{message}" }
+            class: "cypher-card border-l-4 backdrop-blur-sm transition-all duration-200",
+            class: "{notification_type.bg_class()}",
+            div { class: "flex justify-between items-start",
+                div { class: "flex items-start space-x-3 flex-1",
+                    span { class: "text-green-400 font-mono text-xs font-semibold",
+                        "{notification_type.prefix()}" }
+                    span { class: "{notification_type.text_class()} font-mono text-sm",
+                        "{message}" }
                 }
                 button {
-                    class: "cyber-button px-3 py-2 text-sm neon-text-pink hover:neon-glow",
+                    class: "cypher-button secondary px-2 py-1 text-xs border-gray-600 text-gray-600 hover:bg-gray-900 hover:text-green-400 font-mono",
                     onclick: on_close,
                     title: "Close notification",
-                    "×"
+                    "[×]"
                 }
             }
         }
@@ -76,7 +85,7 @@ pub fn NotificationContainer(
     on_remove: EventHandler<usize>,
 ) -> Element {
     rsx! {
-        div { class: "fixed top-20 right-4 z-50 space-y-4 max-w-sm",
+        div { class: "fixed top-20 right-4 z-50 space-y-3 max-w-sm font-mono",
             for (index, (message, notification_type)) in notifications.iter().enumerate() {
                 NotificationCard {
                     notification_type: notification_type.clone(),

@@ -1,5 +1,5 @@
+use crate::components::token_selector::get_common_tokens;
 use dioxus::prelude::*;
-use crate::components::token_selector::{TokenInfo, get_common_tokens};
 
 #[component]
 pub fn VaultList(
@@ -8,19 +8,19 @@ pub fn VaultList(
     on_select: EventHandler<crate::VaultInfo>,
 ) -> Element {
     rsx! {
-        div { class: "cyber-card bg-[#141925]",
-            div { class: "flex items-center justify-between mb-6",
-                h2 { class: "text-xl font-semibold text-gray-200", "Your Vaults" }
-                div { class: "bg-green-400 bg-opacity-10 text-green-400 px-3 py-1 text-xs font-semibold uppercase tracking-wider border border-green-400 border-opacity-30", "{vaults.len()} total" }
+        div { class: "cypher-card",
+            div { class: "flex items-center justify-between mb-6 border-b border-gray-800 pb-4",
+                h2 { class: "text-xl font-semibold text-white font-mono tracking-wider", "[VAULTS]" }
+                div { class: "status-badge success", "TOTAL: {vaults.len()}" }
             }
 
             if vaults.is_empty() {
                 div { class: "text-center py-12",
-                    div { class: "text-5xl mb-4 text-cyan-300", "🏦" }
-                    h3 { class: "text-lg font-medium mb-2 text-gray-200", "No Vaults Found" }
-                    p { class: "text-gray-400", "Create your first vault to get started" }
-                    div { class: "mt-6 text-sm text-gray-400",
-                        "📝 Use form below to create your first vault"
+                    div { class: "text-4xl mb-4 text-gray-500 font-mono", "[EMPTY]" }
+                    h3 { class: "text-lg font-medium mb-2 text-gray-400 font-mono", "NO_VAULTS_FOUND" }
+                    p { class: "text-gray-500 font-mono text-sm", "> Create your first vault to begin protocol" }
+                    div { class: "mt-6 text-sm text-gray-600 font-mono",
+                        "$ vault create --beneficiary <address> --amount <amount>"
                     }
                 }
             } else {
@@ -32,7 +32,6 @@ pub fn VaultList(
                         // Find token info for this mint
                         let tokens = get_common_tokens();
                         let token_info = tokens.iter().find(|t| t.mint == vault.token_mint);
-                        let token_icon = token_info.map(|t| t.icon.as_str()).unwrap_or("🪙");
                         let token_symbol = token_info.map(|t| t.symbol.as_str()).unwrap_or("UNKNOWN");
 
                         // Calculate display balance based on token decimals
@@ -42,9 +41,9 @@ pub fn VaultList(
                             vault.balance as f64 / 1_000_000.0 // Default to 6 decimals
                         };
 
-                        // Format beneficiary address
-                        let beneficiary_short = if vault.beneficiary.len() > 8 {
-                            format!("{}...{}", &vault.beneficiary[..4], &vault.beneficiary[vault.beneficiary.len()-4..])
+                        // Format beneficiary address - terminal style
+                        let beneficiary_short = if vault.beneficiary.len() > 16 {
+                            format!("{}...{}", &vault.beneficiary[..8], &vault.beneficiary[vault.beneficiary.len()-8..])
                         } else {
                             vault.beneficiary.clone()
                         };
@@ -52,38 +51,66 @@ pub fn VaultList(
                         rsx! {
                             div {
                                 class: if is_selected {
-                                    "cyber-card bg-[#1e2433] border-cyan-400 cursor-pointer"
+                                    "cypher-card border-green-400 cursor-pointer bg-black"
                                 } else {
-                                    "cyber-card bg-[#141925] border-[#2a3441] hover:border-cyan-400 hover:transform hover:-translate-y-1 cursor-pointer"
+                                    "cypher-card border-gray-800 hover:border-green-400 cursor-pointer bg-black"
                                 },
                                 onclick: move |_| on_select.call(vault_clone.clone()),
 
-                                div { class: "flex items-start justify-between mb-3",
-                                    div { class: "flex items-center space-x-2",
-                                        span { class: "text-2xl", "{token_icon}" }
-                                        span { class: "text-lg font-bold text-cyan-300", "Vault #{index + 1}" }
+                                // Vault Header
+                                div { class: "flex items-start justify-between mb-4 border-b border-gray-900 pb-3",
+                                    div { class: "flex items-center space-x-3",
+                                        span { class: "text-green-400 font-mono text-xs", "[VAULT_{index + 1:02}]" }
+                                        span { class: "text-xs text-gray-600 font-mono", "ID: {&vault.pubkey[..8]}..." }
                                     }
                                     if is_selected {
-                                        span { class: "text-green-400 text-sm", "● SELECTED" }
+                                        span { class: "status-badge success", "SELECTED" }
                                     }
                                 }
 
-                                div { class: "space-y-2",
+                                // Vault Data
+                                div { class: "space-y-3 font-mono text-sm",
                                     div { class: "flex items-center justify-between",
-                                        span { class: "text-sm text-gray-400", "Balance:" }
-                                        span { class: "text-lg font-semibold text-gray-200",
-                                            "{display_balance:.4} {token_symbol}"
+                                        span { class: "text-gray-500 uppercase text-xs", "balance:" }
+                                        span { class: "text-green-400 font-semibold",
+                                            "{display_balance:.6} {token_symbol}"
                                         }
                                     }
 
                                     div { class: "flex items-center justify-between",
-                                        span { class: "text-sm text-gray-400", "Beneficiary:" }
-                                        span { class: "text-xs text-pink-500 font-mono", "{beneficiary_short}" }
+                                        span { class: "text-gray-500 uppercase text-xs", "beneficiary:" }
+                                        span { class: "text-xs text-gray-400 font-mono", "{beneficiary_short}" }
                                     }
 
                                     div { class: "flex items-center justify-between",
-                                        span { class: "text-sm text-gray-400", "Token:" }
-                                        span { class: "text-sm text-gray-300", "{token_symbol}" }
+                                        span { class: "text-gray-500 uppercase text-xs", "token:" }
+                                        span { class: "text-xs text-gray-400 font-mono", "{token_symbol}" }
+                                    }
+
+                                    div { class: "flex items-center justify-between",
+                                        span { class: "text-gray-500 uppercase text-xs", "inactivity:" }
+                                        span { class: "text-xs text-gray-400 font-mono", "{vault.inactivity_period / 86400} days" }
+                                    }
+
+                                    div { class: "flex items-center justify-between",
+                                        span { class: "text-gray-500 uppercase text-xs", "last_hb:" }
+                                        span { class: "text-xs text-gray-400 font-mono",
+                                            if vault.last_heartbeat > 0 {
+                                                "active"
+                                            } else {
+                                                "never"
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // Action Status Bar
+                                div { class: "mt-4 pt-3 border-t border-gray-900 flex justify-between items-center",
+                                    span { class: "text-xs text-gray-600 font-mono", "status: active" }
+                                    if is_selected {
+                                        span { class: "text-xs text-green-400 font-mono", "> ready for commands" }
+                                    } else {
+                                        span { class: "text-xs text-gray-600 font-mono", "> click to select" }
                                     }
                                 }
                             }
